@@ -23,6 +23,36 @@ void mml::xml_writer::do_and_node(cdk::and_node * const node, int lvl) {
 void mml::xml_writer::do_or_node(cdk::or_node * const node, int lvl) {
   // EMPTY
 }
+void mml::xml_writer::do_address_of_node(mml::address_of_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::xml_writer::do_nullptr_node(mml::nullptr_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::xml_writer::do_stop_node(mml::stop_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::xml_writer::do_next_node(mml::next_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::xml_writer::do_index_node(mml::index_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::xml_writer::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::xml_writer::do_stack_alloc_node(mml::stack_alloc_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::xml_writer::do_variable_declaration_node(mml::variable_declaration_node * const node, int lvl) {
+  // EMPTY
+}
 
 //---------------------------------------------------------------------------
 

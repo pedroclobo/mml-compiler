@@ -31,6 +31,36 @@ void mml::type_checker::do_and_node(cdk::and_node *const node, int lvl) {
 void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
   // EMPTY
 }
+void mml::type_checker::do_address_of_node(mml::address_of_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_nullptr_node(mml::nullptr_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_stop_node(mml::stop_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_next_node(mml::next_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_index_node(mml::index_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_stack_alloc_node(mml::stack_alloc_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_block_node(mml::block_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_variable_declaration_node(mml::variable_declaration_node * const node, int lvl) {
+  // EMPTY
+}
 
 //---------------------------------------------------------------------------
 
