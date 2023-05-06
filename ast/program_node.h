@@ -2,6 +2,7 @@
 #define __MML_AST_PROGRAM_NODE_H__
 
 #include <cdk/ast/basic_node.h>
+#include <cdk/ast/sequence_node.h>
 
 namespace mml {
 
@@ -9,16 +10,21 @@ namespace mml {
    * Class for describing program nodes.
    */
   class program_node: public cdk::basic_node {
-    cdk::basic_node *_statements;
+    cdk::sequence_node *_declarations;
+    mml::block_node *_block;
 
   public:
-    inline program_node(int lineno, cdk::basic_node *statements) :
-        cdk::basic_node(lineno), _statements(statements) {
+    inline program_node(int lineno, cdk::sequence_node *declarations, mml::block_node *block = nullptr) :
+        cdk::basic_node(lineno), _declarations(declarations) {
     }
 
   public:
-    inline cdk::basic_node *statements() {
-      return _statements;
+    inline cdk::sequence_node *declarations() {
+      return _declarations;
+    }
+
+    inline mml::block_node *block() {
+      return _block;
     }
 
     void accept(basic_ast_visitor *sp, int level) {
