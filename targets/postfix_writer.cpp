@@ -54,6 +54,9 @@ void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
 void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
   // EMPTY
 }
+void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
+  // EMPTY
+}
 
 //---------------------------------------------------------------------------
 
