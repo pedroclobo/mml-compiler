@@ -64,6 +64,9 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
 void mml::type_checker::do_function_call_node(mml::function_call_node * const node, int lvl) {
   // EMPTY
 }
+void mml::type_checker::do_function_node(mml::function_node * const node, int lvl) {
+  // EMPTY
+}
 
 //---------------------------------------------------------------------------
 

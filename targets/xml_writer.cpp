@@ -56,6 +56,9 @@ void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, in
 void mml::xml_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
   // EMPTY
 }
+void mml::xml_writer::do_function_node(mml::function_node * const node, int lvl) {
+  // EMPTY
+}
 
 //---------------------------------------------------------------------------
 
