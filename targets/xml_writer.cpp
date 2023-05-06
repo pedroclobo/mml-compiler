@@ -50,7 +50,7 @@ void mml::xml_writer::do_stack_alloc_node(mml::stack_alloc_node * const node, in
 void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
   // EMPTY
 }
-void mml::xml_writer::do_variable_declaration_node(mml::variable_declaration_node * const node, int lvl) {
+void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
   // EMPTY
 }
 
