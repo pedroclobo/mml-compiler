@@ -245,16 +245,21 @@ void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, 
 
 void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  node->argument()->accept(this, lvl); // determine the value to print
-  if (node->argument()->is_typed(cdk::TYPE_INT)) {
-    _pf.CALL("printi");
-    _pf.TRASH(4); // delete the printed value
-  } else if (node->argument()->is_typed(cdk::TYPE_STRING)) {
-    _pf.CALL("prints");
-    _pf.TRASH(4); // delete the printed value's address
-  } else {
-    std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
-    exit(1);
+  
+  for (size_t ix = 0; ix < node->argument()->size(); ix++) {
+    auto child = dynamic_cast<cdk::expression_node*>(node->argument()->node(ix));
+    child->accept(this, lvl); // expression to print
+    
+    if (child->is_typed(cdk::TYPE_INT)) {
+      _pf.CALL("printi");
+      _pf.TRASH(4); // delete the printed value
+    } else if (child->is_typed(cdk::TYPE_STRING)) {
+      _pf.CALL("prints");
+      _pf.TRASH(4); // delete the printed value's address
+    } else {
+      std::cerr << "ERROR: CANNOT PRINT EXPRESSION OF UNKNOWN TYPE" << std::endl;
+      exit(1);
+    }
   }
 
   if (node->newline()) {
