@@ -34,7 +34,7 @@ void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
 void mml::type_checker::do_address_of_node(mml::address_of_node * const node, int lvl) {
   // EMPTY
 }
-void mml::type_checker::do_nullptr_node(mml::nullptr_node * const node, int lvl) {
+void mml::type_checker::do_null_node(mml::null_node * const node, int lvl) {
   // EMPTY
 }
 void mml::type_checker::do_stop_node(mml::stop_node * const node, int lvl) {

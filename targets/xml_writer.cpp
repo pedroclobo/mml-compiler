@@ -26,7 +26,7 @@ void mml::xml_writer::do_or_node(cdk::or_node * const node, int lvl) {
 void mml::xml_writer::do_address_of_node(mml::address_of_node * const node, int lvl) {
   // EMPTY
 }
-void mml::xml_writer::do_nullptr_node(mml::nullptr_node * const node, int lvl) {
+void mml::xml_writer::do_null_node(mml::null_node * const node, int lvl) {
   // EMPTY
 }
 void mml::xml_writer::do_stop_node(mml::stop_node * const node, int lvl) {
