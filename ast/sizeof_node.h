@@ -9,7 +9,7 @@ namespace mml {
     cdk::expression_node *_expression;
 
   public:
-    sizeof_node(int lineno, cdk::expression_node *expression = nullptr) :
+    sizeof_node(int lineno, cdk::expression_node *expression) :
         cdk::expression_node(lineno), _expression(expression) {
     }
 
