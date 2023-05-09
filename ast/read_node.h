@@ -12,7 +12,7 @@ namespace mml {
 
   public:
     inline read_node(int lineno) :
-      cdk::expression_node(lineno) {
+        cdk::expression_node(lineno) {
     }
 
   public:
