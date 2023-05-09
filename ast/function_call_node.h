@@ -11,10 +11,6 @@ namespace mml {
     cdk::sequence_node *_arguments;
 
   public:
-    function_call_node(int lineno, cdk::expression_node *function) :
-        cdk::expression_node(lineno), _function(function), _arguments(new cdk::sequence_node(lineno)) {
-    }
-
     function_call_node(int lineno, cdk::expression_node *function, cdk::sequence_node *arguments) :
         cdk::expression_node(lineno), _function(function), _arguments(arguments) {
     }
