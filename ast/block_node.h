@@ -1,5 +1,5 @@
-#ifndef __MML_AST_BLOCK_H__
-#define __MML_AST_BLOCK_H__
+#ifndef __MML_AST_BLOCK_NODE_H__
+#define __MML_AST_BLOCK_NODE_H__
 
 #include <cdk/ast/basic_node.h>
 

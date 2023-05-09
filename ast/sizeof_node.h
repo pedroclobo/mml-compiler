@@ -1,5 +1,5 @@
-#ifndef __MML_AST_SIZEOF_H__
-#define __MML_AST_SIZEOF_H__
+#ifndef __MML_AST_SIZEOF_NODE_H__
+#define __MML_AST_SIZEOF_NODE_H__
 
 #include <cdk/ast/expression_node.h>
 

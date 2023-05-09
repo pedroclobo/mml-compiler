@@ -1,5 +1,5 @@
-#ifndef __MML_AST_RETURN_H__
-#define __MML_AST_RETURN_H__
+#ifndef __MML_AST_RETURN_NODE_H__
+#define __MML_AST_RETURN_NODE_H__
 
 #include <cdk/ast/basic_node.h>
 #include <cdk/ast/expression_node.h>

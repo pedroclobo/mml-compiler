@@ -1,5 +1,5 @@
-#ifndef __MML_AST_NEXT_H__
-#define __MML_AST_NEXT_H__
+#ifndef __MML_AST_NEXT_NODE_H__
+#define __MML_AST_NEXT_NODE_H__
 
 #include <cdk/ast/basic_node.h>
 
