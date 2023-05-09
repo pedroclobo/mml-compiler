@@ -20,13 +20,13 @@ namespace mml {
     }
 
   public:
-    int qualifier() {
+    inline int qualifier() {
       return _qualifier;
     }
-    const std::string& identifier() const {
+    inline const std::string& identifier() const {
       return _identifier;
     }
-    cdk::expression_node* initializer() {
+    inline cdk::expression_node* initializer() {
       return _initializer;
     }
 

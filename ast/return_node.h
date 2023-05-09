@@ -10,12 +10,12 @@ namespace mml {
     cdk::expression_node *_retval;
 
   public:
-    return_node(int lineno, cdk::expression_node *retval) :
+    inline return_node(int lineno, cdk::expression_node *retval) :
         cdk::basic_node(lineno), _retval(retval) {
     }
 
   public:
-    cdk::expression_node* retval() {
+    inline cdk::expression_node* retval() {
       return _retval;
     }
 

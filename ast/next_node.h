@@ -9,12 +9,12 @@ namespace mml {
     int _level;
 
   public:
-    next_node(int lineno, int level = 1) :
+    inline next_node(int lineno, int level = 1) :
         cdk::basic_node(lineno), _level(level) {
     }
 
   public:
-    int level() const {
+    inline int level() const {
       return _level;
     }
 

@@ -9,15 +9,15 @@ namespace mml {
     cdk::sequence_node *_declarations, *_instructions;
 
   public:
-    block_node(int lineno, cdk::sequence_node *declarations, cdk::sequence_node *instructions) :
+    inline block_node(int lineno, cdk::sequence_node *declarations, cdk::sequence_node *instructions) :
         cdk::basic_node(lineno), _declarations(declarations), _instructions(instructions) {
     }
 
   public:
-    cdk::sequence_node* declarations() {
+    inline cdk::sequence_node* declarations() {
       return _declarations;
     }
-    cdk::sequence_node* instructions() {
+    inline cdk::sequence_node* instructions() {
       return _instructions;
     }
 

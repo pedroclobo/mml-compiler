@@ -18,13 +18,13 @@ namespace mml {
     }
 
   public:
-    cdk::sequence_node* arguments() {
+    inline cdk::sequence_node* arguments() {
       return _arguments;
     }
-    cdk::typed_node* argument(size_t ax) {
+    inline cdk::typed_node* argument(size_t ax) {
       return dynamic_cast<cdk::typed_node*>(_arguments->node(ax));
     }
-    mml::block_node* block() {
+    inline mml::block_node* block() {
       return _block;
     }
 

@@ -10,12 +10,12 @@ namespace mml {
     cdk::lvalue_node *_lvalue;
 
   public:
-    address_of_node(int lineno, cdk::lvalue_node *argument) :
+    inline address_of_node(int lineno, cdk::lvalue_node *argument) :
         cdk::expression_node(lineno), _lvalue(argument) {
     }
 
   public:
-    cdk::lvalue_node* lvalue() {
+    inline cdk::lvalue_node* lvalue() {
       return _lvalue;
     }
 
