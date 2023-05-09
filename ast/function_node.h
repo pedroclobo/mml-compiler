@@ -1,24 +1,19 @@
 #ifndef __MML_AST_function_H__
 #define __MML_AST_function_H__
 
-#include <cdk/ast/typed_node.h>
+#include <cdk/ast/expression_node.h>
 #include <cdk/ast/sequence_node.h>
 #include "ast/block_node.h"
 
 namespace mml {
 
-  class function_node: public cdk::typed_node {
+  class function_node: public cdk::expression_node {
     cdk::sequence_node *_arguments;
     mml::block_node *_block;
 
   public:
-    function_node(int lineno, cdk::sequence_node *arguments, mml::block_node *block) :
-        cdk::typed_node(lineno), _arguments(arguments), _block(block) {
-      type(cdk::primitive_type::create(0, cdk::TYPE_VOID));
-    }
-
-    function_node(int lineno, std::shared_ptr<cdk::basic_type> funType, cdk::sequence_node *arguments, mml::block_node *block) :
-        cdk::typed_node(lineno), _arguments(arguments), _block(block) {
+    function_node(int lineno, cdk::sequence_node *arguments, std::shared_ptr<cdk::basic_type> funType, mml::block_node *block) :
+        cdk::expression_node(lineno), _arguments(arguments), _block(block) {
       type(funType);
     }
 
