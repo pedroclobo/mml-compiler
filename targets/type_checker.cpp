@@ -198,7 +198,7 @@ void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int
 }
 
 void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
-  node->argument()->accept(this, lvl + 2);
+  node->arguments()->accept(this, lvl + 2);
 }
 
 //---------------------------------------------------------------------------

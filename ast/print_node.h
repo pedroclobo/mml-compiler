@@ -9,17 +9,17 @@ namespace mml {
    * Class for describing print nodes.
    */
   class print_node: public cdk::basic_node {
-    cdk::sequence_node *_argument;
+    cdk::sequence_node *_arguments;
     bool _newline;
 
   public:
-    inline print_node(int lineno, cdk::sequence_node *argument, bool newline) :
-        cdk::basic_node(lineno), _argument(argument), _newline(newline) {
+    inline print_node(int lineno, cdk::sequence_node *arguments, bool newline) :
+        cdk::basic_node(lineno), _arguments(arguments), _newline(newline) {
     }
 
   public:
-    inline cdk::sequence_node *argument() {
-      return _argument;
+    inline cdk::sequence_node *arguments() {
+      return _arguments;
     }
 
     inline bool newline() {
