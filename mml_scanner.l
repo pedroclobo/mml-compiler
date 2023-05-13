@@ -31,7 +31,7 @@
 "if"                   return tIF; 
 "else"                 return tELSE; 
 "!"                    return tPRINT; 
-"!!"                   return tPRINT_NL; 
+"!!"                   return tPRINTLN; 
 "read"                 return tREAD; 
 "begin"                return tBEGIN; 
 "end"                  return tEND; 

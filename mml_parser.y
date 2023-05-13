@@ -34,7 +34,7 @@
 
 %token <i> tINTEGER
 %token <s> tIDENTIFIER tSTRING
-%token tWHILE tIF tPRINT tPRINT_NL tREAD tBEGIN tEND
+%token tWHILE tIF tPRINT tPRINTLN tREAD tBEGIN tEND
 
 %nonassoc tIFX
 %nonassoc tELSE
@@ -63,8 +63,8 @@ list : stmt	     { $$ = new cdk::sequence_node(LINE, $1); }
 	   ;
 
 stmt : expr ';'                         { $$ = new mml::evaluation_node(LINE, $1); }
- 	| list tPRINT                      { $$ = new mml::print_node(LINE, $1, false); }
- 	| list tPRINT_NL                   { $$ = new mml::print_node(LINE, $1, true); }
+ 	   | list tPRINT                      { $$ = new mml::print_node(LINE, $1, false); }
+ 	   | list tPRINTLN                    { $$ = new mml::print_node(LINE, $1, true); }
      | tREAD lval ';'                   { $$ = new mml::read_node(LINE); }
      | tWHILE '(' expr ')' stmt         { $$ = new mml::while_node(LINE, $3, $5); }
      | tIF '(' expr ')' stmt %prec tIFX { $$ = new mml::if_node(LINE, $3, $5); }
