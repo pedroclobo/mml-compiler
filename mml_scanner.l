@@ -27,12 +27,30 @@
 "=="                   return tEQ; 
 "!="                   return tNE; 
 
-"while"                return tWHILE; 
+"int"                  return tTYPE_INT;
+"double"               return tTYPE_DOUBLE;
+"string"               return tTYPE_STRING;
+"void"                 return tTYPE_VOID;
+"auto"                 return tTYPE_AUTO;
+
+"public"               return tPUBLIC;
+"forward"              return tFORWARD;
+"foreign"              return tFOREIGN;
+
 "if"                   return tIF; 
+"elif"                 return tELIF;
 "else"                 return tELSE; 
+"while"                return tWHILE;
+"stop"                 return tSTOP;
+"next"                 return tNEXT;
+"return"               return tRETURN;
+
 "!"                    return tPRINT; 
 "!!"                   return tPRINTLN; 
-"read"                 return tREAD; 
+"input"                return tREAD;
+"null"                 return tNULL;
+"sizeof"               return tSIZEOF;
+
 "begin"                return tBEGIN; 
 "end"                  return tEND; 
 

@@ -34,10 +34,15 @@
 
 %token <i> tINTEGER
 %token <s> tIDENTIFIER tSTRING
-%token tWHILE tIF tPRINT tPRINTLN tREAD tBEGIN tEND
+%token tTYPE_INT tTYPE_DOUBLE tTYPE_STRING tTYPE_VOID tTYPE_AUTO
+%token tPUBLIC tFORWARD tFOREIGN
+%token tIF tELIF tELSE tWHILE tSTOP tNEXT tRETURN
+%token tPRINT tPRINTLN tREAD tNULL tSIZEOF
+%token tBEGIN tEND
 
 %nonassoc tIFX
 %nonassoc tELSE
+%nonassoc tELIF
 
 %right '='
 %left tGE tLE tEQ tNE '>' '<'
