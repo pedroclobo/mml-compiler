@@ -36,7 +36,11 @@ void mml::xml_writer::do_next_node(mml::next_node * const node, int lvl) {
   // EMPTY
 }
 void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
-  // EMPTY
+  openTag(node, lvl);
+  if (node->retval() != nullptr) {
+    node->retval()->accept(this, lvl + 4);
+  }
+  closeTag(node, lvl);
 }
 void mml::xml_writer::do_index_node(mml::index_node * const node, int lvl) {
   // EMPTY
@@ -48,7 +52,14 @@ void mml::xml_writer::do_stack_alloc_node(mml::stack_alloc_node * const node, in
   // EMPTY
 }
 void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
-  // EMPTY
+  openTag(node, lvl);
+  if (node->declarations()) {
+    node->declarations()->accept(this, lvl + 2);
+  }
+  if (node->instructions()) {
+    node->instructions()->accept(this, lvl + 2);
+  }
+  closeTag(node, lvl);
 }
 void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
   // EMPTY
@@ -57,7 +68,14 @@ void mml::xml_writer::do_function_call_node(mml::function_call_node * const node
   // EMPTY
 }
 void mml::xml_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
-  // EMPTY
+  openTag(node, lvl);
+  if (node->arguments()) {
+    node->arguments()->accept(this, lvl + 2);
+  }
+  if (node->block()) {
+    node->block()->accept(this, lvl + 2);
+  }
+  closeTag(node, lvl);
 }
 void mml::xml_writer::do_identity_node(mml::identity_node * const node, int lvl) {
   // EMPTY

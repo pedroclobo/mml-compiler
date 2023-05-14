@@ -49,7 +49,12 @@ void mml::postfix_writer::do_stack_alloc_node(mml::stack_alloc_node * const node
   // EMPTY
 }
 void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
-  // EMPTY
+  if (node->declarations()) {
+    node->declarations()->accept(this, lvl);
+  }
+  if (node->instructions()) {
+    node->instructions()->accept(this, lvl);
+  }
 }
 void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
   // EMPTY
@@ -58,7 +63,30 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
   // EMPTY
 }
 void mml::postfix_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
-  // EMPTY
+  if (node->main()) {
+    // generate the main function (RTS mandates that its name be "_main")
+    _pf.TEXT();
+    _pf.ALIGN();
+    _pf.GLOBAL("_main", _pf.FUNC());
+    _pf.LABEL("_main");
+    _pf.ENTER(0);  // MML doesn't implement local variables
+
+    if (node->block()) {
+      node->block()->accept(this, lvl);
+    }
+
+    // end the main function
+    _pf.INT(0);
+    _pf.STFVAL32();
+    _pf.LEAVE();
+    _pf.RET();
+
+    // these are just a few library function imports
+    _pf.EXTERN("readi");
+    _pf.EXTERN("printi");
+    _pf.EXTERN("prints");
+    _pf.EXTERN("println");
+  }
 }
 void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int lvl) {
   // EMPTY

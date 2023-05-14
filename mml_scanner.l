@@ -11,7 +11,7 @@
 // don't change this
 #define yyerror LexerError
 %}
-%x X_STRING X_COMMENT
+%x X_STRING X_COMMENT X_ESCAPE
 %%
   yydebug=1; set_debug(1);
 
@@ -26,6 +26,9 @@
 "<="                   return tLE; 
 "=="                   return tEQ; 
 "!="                   return tNE; 
+"&&"                   return tAND;
+"||"                   return tOR;
+"~"                    return *yytext;
 
 "int"                  return tTYPE_INT;
 "double"               return tTYPE_DOUBLE;
@@ -56,11 +59,17 @@
 
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
 
-\'                     yy_push_state(X_STRING); yylval.s = new std::string("");
-<X_STRING>\'           yy_pop_state(); return tSTRING;
-<X_STRING>\\\'         *yylval.s += yytext + 1;
-<X_STRING>.            *yylval.s += yytext;
-<X_STRING>\n           yyerror("newline in string");
+\"                     yy_push_state(X_STRING); yylval.s = new std::string("");
+<X_STRING>\"           yy_pop_state(); return tSTRING;
+<X_STRING>\\           yy_push_state(X_ESCAPE);
+<X_STRING>.            *yylval.s += *yytext;
+
+<X_ESCAPE>\"           *yylval.s += '"'; yy_pop_state();
+<X_ESCAPE>\\           *yylval.s += '\\'; yy_pop_state();
+<X_ESCAPE>t            *yylval.s += '\t'; yy_pop_state();
+<X_ESCAPE>n            *yylval.s += '\n'; yy_pop_state();
+<X_ESCAPE>r            *yylval.s += '\r'; yy_pop_state();
+<X_ESCAPE>[0-7]{1,3}   *yylval.s += (char)strtoul(yytext, NULL, 8); yy_pop_state();
 
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
