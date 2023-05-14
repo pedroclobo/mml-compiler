@@ -28,6 +28,9 @@ namespace mml {
     inline mml::block_node* block() {
       return _block;
     }
+    inline bool main() {
+      return _main;
+    }
 
     void accept(basic_ast_visitor *sp, int level) {
       sp->do_function_node(this, level);
