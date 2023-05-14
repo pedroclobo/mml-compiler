@@ -55,7 +55,7 @@
 %}
 %%
 
-program	: tBEGIN list tEND { compiler->ast(new mml::program_node(LINE, $2, $2, $2)); }
+program	: tBEGIN list tEND { }
 	      ;
 
 list : stmt	     { $$ = new cdk::sequence_node(LINE, $1); }

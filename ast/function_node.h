@@ -10,10 +10,11 @@ namespace mml {
   class function_node: public cdk::expression_node {
     cdk::sequence_node *_arguments;
     mml::block_node *_block;
+    bool _main;
 
   public:
-    function_node(int lineno, cdk::sequence_node *arguments, std::shared_ptr<cdk::basic_type> funType, mml::block_node *block) :
-        cdk::expression_node(lineno), _arguments(arguments), _block(block) {
+    function_node(int lineno, cdk::sequence_node *arguments, std::shared_ptr<cdk::basic_type> funType, mml::block_node *block, bool main = false) :
+        cdk::expression_node(lineno), _arguments(arguments), _block(block), _main(main) {
       type(funType);
     }
 

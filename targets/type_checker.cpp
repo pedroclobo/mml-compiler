@@ -192,10 +192,6 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 
 //---------------------------------------------------------------------------
 
-void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) {
-  // EMPTY
-}
-
 void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int lvl) {
   node->argument()->accept(this, lvl + 2);
 }
