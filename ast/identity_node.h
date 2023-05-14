@@ -9,7 +9,7 @@ namespace mml {
 
   public:
     inline identity_node(int lineno, cdk::expression_node *arg) :
-      cdk::unary_operation_node(lineno, arg) {
+        cdk::unary_operation_node(lineno, arg) {
     }
 
   public:
