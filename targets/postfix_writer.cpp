@@ -63,6 +63,9 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
 void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int lvl) {
   // EMPTY
 }
+void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
+  // EMPTY
+}
 
 //---------------------------------------------------------------------------
 
