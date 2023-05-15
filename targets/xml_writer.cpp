@@ -81,7 +81,14 @@ void mml::xml_writer::do_identity_node(mml::identity_node * const node, int lvl)
   do_unary_operation(node, lvl);
 }
 void mml::xml_writer::do_program_node(mml::program_node * const node, int lvl) {
-  // EMPTY
+  openTag(node, lvl);
+  if (node->declarations()) {
+    node->declarations()->accept(this, lvl + 2);
+  }
+  if (node->block()) {
+    node->block()->accept(this, lvl + 2);
+  }
+  closeTag(node, lvl);
 }
 
 //---------------------------------------------------------------------------

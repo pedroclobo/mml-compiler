@@ -63,36 +63,37 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
   // EMPTY
 }
 void mml::postfix_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
-  if (node->main()) {
-    // generate the main function (RTS mandates that its name be "_main")
-    _pf.TEXT();
-    _pf.ALIGN();
-    _pf.GLOBAL("_main", _pf.FUNC());
-    _pf.LABEL("_main");
-    _pf.ENTER(0);  // MML doesn't implement local variables
-
-    if (node->block()) {
-      node->block()->accept(this, lvl);
-    }
-
-    // end the main function
-    _pf.INT(0);
-    _pf.STFVAL32();
-    _pf.LEAVE();
-    _pf.RET();
-
-    // these are just a few library function imports
-    _pf.EXTERN("readi");
-    _pf.EXTERN("printi");
-    _pf.EXTERN("prints");
-    _pf.EXTERN("println");
-  }
+  // EMPTY
 }
 void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int lvl) {
   // EMPTY
 }
 void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
-  // EMPTY
+  // generate the main function (RTS mandates that its name be "_main")
+  _pf.TEXT();
+  _pf.ALIGN();
+  _pf.GLOBAL("_main", _pf.FUNC());
+  _pf.LABEL("_main");
+  _pf.ENTER(0);  // MML doesn't implement local variables
+
+  if (node->declarations()) {
+    node->declarations()->accept(this, lvl);
+  }
+  if (node->block()) {
+    node->block()->accept(this, lvl);
+  }
+
+  // end the main function
+  _pf.INT(0);
+  _pf.STFVAL32();
+  _pf.LEAVE();
+  _pf.RET();
+
+  // these are just a few library function imports
+  _pf.EXTERN("readi");
+  _pf.EXTERN("printi");
+  _pf.EXTERN("prints");
+  _pf.EXTERN("println");
 }
 
 //---------------------------------------------------------------------------

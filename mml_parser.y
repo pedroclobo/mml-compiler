@@ -63,6 +63,7 @@
 %type <node> file instruction if_instruction declaration
 %type <sequence> instructions declarations expressions
 %type <expression> expression initializer
+%type <block> block
 %type <lvalue> lvalue
 %type <type> data_type
 %type <s> string
@@ -72,10 +73,17 @@
 %}
 %%
 
-file           : declarations                                        { compiler->ast(new mml::function_definition_node(LINE, nullptr, nullptr, new mml::block_node(LINE, $1, nullptr), true)); }
-               | tBEGIN instructions tEND                            { compiler->ast(new mml::function_definition_node(LINE, nullptr, nullptr, new mml::block_node(LINE, nullptr, $2), true)); }
+file           : declarations                                        { compiler->ast(new mml::program_node(LINE, $1, nullptr)); }
+               | tBEGIN block tEND                                   { compiler->ast(new mml::program_node(LINE, nullptr, $2)); }
+               ;
 
-declaration    : data_type tIDENTIFIER '=' initializer               { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, $4);                                                             }
+block          : declarations instructions                           { $$ = new mml::block_node(LINE, $1, $2);                                                                                 }
+               | declarations                                        { $$ = new mml::block_node(LINE, $1, nullptr);                                                                            }
+               | instructions                                        { $$ = new mml::block_node(LINE, nullptr, $1);                                                                            }
+               | /* empty */                                         { $$ = new mml::block_node(LINE, nullptr, nullptr);                                                                       }
+               ;
+
+declaration    : data_type tIDENTIFIER '=' initializer ';'           { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, $4);                                                             }
 
 declarations   : /* empty */  declaration                            { $$ = new cdk::sequence_node(LINE, $1);                                                                                  }
                | declarations declaration                            { $$ = new cdk::sequence_node(LINE, $2, $1);                                                                              }
