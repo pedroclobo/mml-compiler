@@ -94,15 +94,16 @@ declarations   : /* empty */  declaration                            { $$ = new 
 instruction    : expression ';'                                      { $$ = new mml::evaluation_node(LINE, $1);                                                                                }
                | expressions tPRINT                                  { $$ = new mml::print_node(LINE, $1, false);                                                                              }
                | expressions tPRINTLN                                { $$ = new mml::print_node(LINE, $1, true);                                                                               }
-               /* | tSTOP ';'                                           { $$ = new mml::stop_node(LINE);                                                                                          } */
-               /* | tSTOP tINTEGER ';'                                  { $$ = new mml::stop_node(LINE, $1);                                                                                      } */
-               /* | tNEXT ';'                                           { $$ = new mml::next_node(LINE);                                                                                          } */
-               /* | tNEXT tINTEGER ';'                                  { $$ = new mml::next_node(LINE, $1);                                                                                      } */
+               | tSTOP ';'                                           { $$ = new mml::stop_node(LINE);                                                                                          }
+               | tSTOP tINTEGER ';'                                  { $$ = new mml::stop_node(LINE, $2);                                                                                      }
+               | tNEXT ';'                                           { $$ = new mml::next_node(LINE);                                                                                          }
+               | tNEXT tINTEGER ';'                                  { $$ = new mml::next_node(LINE, $2);                                                                                      }
                | tRETURN ';'                                         { $$ = new mml::return_node(LINE, nullptr);                                                                               }
                | tRETURN expression ';'                              { $$ = new mml::return_node(LINE, $2);                                                                                    }
                | tIF if_instruction                                  { $$ = $2;                                                                                                                }
-               /* | iterative_instruction */
-               /* | block  */
+               | tWHILE '(' expression ')' instruction               { $$ = new mml::while_node(LINE, $3, $5);                                                                                 }
+               | '{' block '}'                                       { $$ = $2; }
+               ;
 
 if_instruction : '(' expression ')' instruction                      { $$ = new mml::if_node(LINE, $2, $4);                                                                                    }
                | '(' expression ')' instruction tELSE instruction    { $$ = new mml::if_else_node(LINE, $2, $4, $6);                                                                           }
@@ -117,7 +118,7 @@ data_type      : tTYPE_INT                                           { $$ = cdk:
                | tTYPE_DOUBLE                                        { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE);                                                                  }
                | tTYPE_STRING                                        { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING);                                                                  }
                /* | tTYPE_VOID */
-               /* | tTYPE_AUTO */
+               | tTYPE_AUTO                                          { /* TODO */ }
                ;
 
 expression     : tINTEGER                                            { $$ = new cdk::integer_node(LINE, $1);                                                                                   }
@@ -144,7 +145,7 @@ expression     : tINTEGER                                            { $$ = new 
                | '~' expression                                      { $$ = new cdk::not_node(LINE, $2);                                                                                       }
                | tREAD                                               { $$ = new mml::read_node(LINE);                                                                                          }
                /* | tIDENTIFIER '(' opt_expressions ')'                 { $$ = new mml::function_call_node(LINE, *$1, $3); delete $1;       } */
-               /* | tSIZEOF '(' expressions ')'                         { $$ = new mml::sizeof_node(LINE, new mml::tuple_node(LINE, $3));   } */
+               | tSIZEOF '(' expression ')'                          { $$ = new mml::sizeof_node(LINE, $3);   }
                | '(' expression ')'                                  { $$ = $2;                                                                                                                }
                | '[' expression ']'                                  { $$ = new mml::stack_alloc_node(LINE, $2);                                                                               }
                | lvalue '?'                                          { $$ = new mml::address_of_node(LINE, $1);                                                                                }
