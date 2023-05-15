@@ -46,17 +46,21 @@
 %token tBEGIN tEND
 %token tAND tOR tNE tLE tGE
 
-%nonassoc tIFX
-%nonassoc tELSE
-%nonassoc tELIF
-
 %right '='
-%left tGE tLE tEQ tNE '>' '<'
+%left tOR
+%left tAND
+%nonassoc '~'
+%left tNE tEQ
+%left '<' tLE tGE '>'
 %left '+' '-'
 %left '*' '/' '%'
 %nonassoc tUNARY
+%nonassoc '(' ')' '[' ']'
 
-%type <node> file instruction declaration elseif
+%nonassoc tIF
+%nonassoc tELSE tELIF
+
+%type <node> file instruction conditional_instruction declaration
 %type <sequence> instructions declarations expressions
 %type <expression> expression initializer
 %type <lvalue> lvalue
@@ -86,15 +90,14 @@ instruction  : expression ';'                                      { $$ = new mm
              /* | tNEXT tINTEGER ';'                                  { $$ = new mml::next_node(LINE, $1);                                } */
              | tRETURN ';'                                         { $$ = new mml::return_node(LINE, nullptr);                         }
              | tRETURN expression ';'                              { $$ = new mml::return_node(LINE, $2);                              }
-             | tIF '(' expression ')' instruction                  { $$ = new mml::if_node(LINE, $3, $5);                              }
-             | tIF '(' expression ')' instruction elseif           { $$ = new mml::if_else_node(LINE, $3, $5, $6);                     }
+             | tIF conditional_instruction                         { $$ = $2;                                                          }
              /* | iterative_instruction */
              /* | block  */
 
-elseif       : tELSE instruction                                   { $$ = $2;                                                          }
-             | tELIF '(' expression ')' instruction                { $$ = new mml::if_node(LINE, $3, $5);                              }
-             | tELIF '(' expression ')' instruction elseif         { $$ = new mml::if_else_node(LINE, $3, $5, $6);                     }
-             ;
+conditional_instruction : '(' expression ')' instruction                                { $$ = new mml::if_node(LINE, $2, $4);          }
+                        | '(' expression ')' instruction tELSE instruction              { $$ = new mml::if_else_node(LINE, $2, $4, $6); }
+                        | '(' expression ')' instruction tELIF conditional_instruction  { $$ = new mml::if_else_node(LINE, $2, $4, $6); }
+                        ;
 
 instructions : /* empty */  instruction                            { $$ = new cdk::sequence_node(LINE, $1);                            }
              | instructions instruction                            { $$ = new cdk::sequence_node(LINE, $2, $1);                        }
@@ -128,8 +131,8 @@ expression   : tINTEGER                                            { $$ = new cd
              | expression tNE  expression                          { $$ = new cdk::ne_node(LINE, $1, $3);                              }
              | expression tAND  expression                         { $$ = new cdk::and_node(LINE, $1, $3);                             }
              | expression tOR  expression                          { $$ = new cdk::or_node (LINE, $1, $3);                             }
-             | '-' expression %prec tUMINUS                        { $$ = new cdk::neg_node(LINE, $2);                                 }
-             | '+' expression %prec tUMINUS                        { $$ = $2;                                                          }
+             | '-' expression %prec tUNARY                         { $$ = new cdk::neg_node(LINE, $2);                                 }
+             | '+' expression %prec tUNARY                         { $$ = $2;                                                          }
              | '~' expression                                      { $$ = new cdk::not_node(LINE, $2);                                 }
              | tREAD                                               { $$ = new mml::read_node(LINE);                                    }
              /* | tIDENTIFIER '(' opt_expressions ')'                 { $$ = new mml::function_call_node(LINE, *$1, $3); delete $1;       } */
