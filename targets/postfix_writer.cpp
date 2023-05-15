@@ -57,7 +57,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
   // EMPTY
 }
-void mml::postfix_writer::do_function_node(mml::function_node * const node, int lvl) {
+void mml::postfix_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
   // EMPTY
 }
 void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int lvl) {

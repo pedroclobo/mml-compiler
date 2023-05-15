@@ -1,5 +1,5 @@
-#ifndef __MML_AST_FUNCTION_NODE_H__
-#define __MML_AST_FUNCTION_NODE_H__
+#ifndef __MML_AST_FUNCTION_DEFINITION_NODE_H__
+#define __MML_AST_FUNCTION_DEFINITION_NODE_H__
 
 #include <cdk/ast/expression_node.h>
 #include <cdk/ast/sequence_node.h>
@@ -7,13 +7,13 @@
 
 namespace mml {
 
-  class function_node: public cdk::expression_node {
+  class function_definition_node: public cdk::expression_node {
     cdk::sequence_node *_arguments;
     mml::block_node *_block;
     bool _main;
 
   public:
-    function_node(int lineno, cdk::sequence_node *arguments, std::shared_ptr<cdk::basic_type> funType, mml::block_node *block, bool main = false) :
+    function_definition_node(int lineno, cdk::sequence_node *arguments, std::shared_ptr<cdk::basic_type> funType, mml::block_node *block, bool main = false) :
         cdk::expression_node(lineno), _arguments(arguments), _block(block), _main(main) {
       type(funType);
     }
@@ -33,7 +33,7 @@ namespace mml {
     }
 
     void accept(basic_ast_visitor *sp, int level) {
-      sp->do_function_node(this, level);
+      sp->do_function_definition_node(this, level);
     }
 
   };
