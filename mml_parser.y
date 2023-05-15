@@ -62,7 +62,7 @@
 
 %type <node> file instruction if_instruction declaration
 %type <sequence> instructions declarations expressions
-%type <expression> expression initializer
+%type <expression> expression
 %type <block> block
 %type <lvalue> lvalue
 %type <type> data_type
@@ -75,6 +75,7 @@
 
 file           : declarations                                        { compiler->ast(new mml::program_node(LINE, $1, nullptr)); }
                | tBEGIN block tEND                                   { compiler->ast(new mml::program_node(LINE, nullptr, $2)); }
+               | declarations tBEGIN block tEND                      { compiler->ast(new mml::program_node(LINE, $1, $3));      }
                ;
 
 block          : declarations instructions                           { $$ = new mml::block_node(LINE, $1, $2);                                                                                 }
@@ -83,7 +84,8 @@ block          : declarations instructions                           { $$ = new 
                | /* empty */                                         { $$ = new mml::block_node(LINE, nullptr, nullptr);                                                                       }
                ;
 
-declaration    : data_type tIDENTIFIER '=' initializer ';'           { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, $4);                                                             }
+declaration    : data_type tIDENTIFIER '=' expression ';'            { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, $4);                                                             }
+               | data_type tIDENTIFIER ';'                           { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, nullptr);                                                        }
 
 declarations   : /* empty */  declaration                            { $$ = new cdk::sequence_node(LINE, $1);                                                                                  }
                | declarations declaration                            { $$ = new cdk::sequence_node(LINE, $2, $1);                                                                              }
@@ -110,8 +112,6 @@ if_instruction : '(' expression ')' instruction                      { $$ = new 
 instructions   : /* empty */  instruction                            { $$ = new cdk::sequence_node(LINE, $1);                                                                                  }
                | instructions instruction                            { $$ = new cdk::sequence_node(LINE, $2, $1);                                                                              }
                ;
-
-initializer    : '=' expression                                      { $$ = $2;                                                                                                                }
 
 data_type      : tTYPE_INT                                           { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT);                                                                     }
                | tTYPE_DOUBLE                                        { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE);                                                                  }

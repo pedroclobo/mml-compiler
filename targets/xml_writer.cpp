@@ -62,7 +62,11 @@ void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
   closeTag(node, lvl);
 }
 void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
-  // EMPTY
+  openTag(node, lvl);
+  if (node->initializer()) {
+    node->initializer()->accept(this, lvl + 2);
+  }
+  closeTag(node, lvl);
 }
 void mml::xml_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
   // EMPTY
