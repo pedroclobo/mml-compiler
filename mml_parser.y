@@ -73,93 +73,93 @@
 %}
 %%
 
-file           : declarations                                        { compiler->ast(new mml::program_node(LINE, $1, nullptr)); }
-               | tBEGIN block tEND                                   { compiler->ast(new mml::program_node(LINE, nullptr, $2)); }
-               | declarations tBEGIN block tEND                      { compiler->ast(new mml::program_node(LINE, $1, $3));      }
+file           : declarations                                        { compiler->ast(new mml::program_node(LINE, $1, nullptr));         }
+               | tBEGIN block tEND                                   { compiler->ast(new mml::program_node(LINE, nullptr, $2));         }
+               | declarations tBEGIN block tEND                      { compiler->ast(new mml::program_node(LINE, $1, $3));              }
                ;
 
-block          : declarations instructions                           { $$ = new mml::block_node(LINE, $1, $2);                                                                                 }
-               | declarations                                        { $$ = new mml::block_node(LINE, $1, nullptr);                                                                            }
-               | instructions                                        { $$ = new mml::block_node(LINE, nullptr, $1);                                                                            }
-               | /* empty */                                         { $$ = new mml::block_node(LINE, nullptr, nullptr);                                                                       }
+block          : declarations instructions                           { $$ = new mml::block_node(LINE, $1, $2);                          }
+               | declarations                                        { $$ = new mml::block_node(LINE, $1, nullptr);                     }
+               | instructions                                        { $$ = new mml::block_node(LINE, nullptr, $1);                     }
+               | /* empty */                                         { $$ = new mml::block_node(LINE, nullptr, nullptr);                }
                ;
 
-declaration    : data_type tIDENTIFIER '=' expression ';'            { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, $4);                                                             }
-               | data_type tIDENTIFIER ';'                           { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, nullptr);                                                        }
+declaration    : data_type tIDENTIFIER '=' expression ';'            { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, $4);      }
+               | data_type tIDENTIFIER ';'                           { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, nullptr); }
 
-declarations   : /* empty */  declaration                            { $$ = new cdk::sequence_node(LINE, $1);                                                                                  }
-               | declarations declaration                            { $$ = new cdk::sequence_node(LINE, $2, $1);                                                                              }
+declarations   : /* empty */  declaration                            { $$ = new cdk::sequence_node(LINE, $1);                           }
+               | declarations declaration                            { $$ = new cdk::sequence_node(LINE, $2, $1);                       }
                ;
 
-instruction    : expression ';'                                      { $$ = new mml::evaluation_node(LINE, $1);                                                                                }
-               | expressions tPRINT                                  { $$ = new mml::print_node(LINE, $1, false);                                                                              }
-               | expressions tPRINTLN                                { $$ = new mml::print_node(LINE, $1, true);                                                                               }
-               | tSTOP ';'                                           { $$ = new mml::stop_node(LINE);                                                                                          }
-               | tSTOP tINTEGER ';'                                  { $$ = new mml::stop_node(LINE, $2);                                                                                      }
-               | tNEXT ';'                                           { $$ = new mml::next_node(LINE);                                                                                          }
-               | tNEXT tINTEGER ';'                                  { $$ = new mml::next_node(LINE, $2);                                                                                      }
-               | tRETURN ';'                                         { $$ = new mml::return_node(LINE, nullptr);                                                                               }
-               | tRETURN expression ';'                              { $$ = new mml::return_node(LINE, $2);                                                                                    }
-               | tIF if_instruction                                  { $$ = $2;                                                                                                                }
-               | tWHILE '(' expression ')' instruction               { $$ = new mml::while_node(LINE, $3, $5);                                                                                 }
-               | '{' block '}'                                       { $$ = $2; }
+instruction    : expression ';'                                      { $$ = new mml::evaluation_node(LINE, $1);                         }
+               | expressions tPRINT                                  { $$ = new mml::print_node(LINE, $1, false);                       }
+               | expressions tPRINTLN                                { $$ = new mml::print_node(LINE, $1, true);                        }
+               | tSTOP ';'                                           { $$ = new mml::stop_node(LINE);                                   }
+               | tSTOP tINTEGER ';'                                  { $$ = new mml::stop_node(LINE, $2);                               }
+               | tNEXT ';'                                           { $$ = new mml::next_node(LINE);                                   }
+               | tNEXT tINTEGER ';'                                  { $$ = new mml::next_node(LINE, $2);                               }
+               | tRETURN ';'                                         { $$ = new mml::return_node(LINE, nullptr);                        }
+               | tRETURN expression ';'                              { $$ = new mml::return_node(LINE, $2);                             }
+               | tIF if_instruction                                  { $$ = $2;                                                         }
+               | tWHILE '(' expression ')' instruction               { $$ = new mml::while_node(LINE, $3, $5);                          }
+               | '{' block '}'                                       { $$ = $2;                                                         }
                ;
 
-if_instruction : '(' expression ')' instruction                      { $$ = new mml::if_node(LINE, $2, $4);                                                                                    }
-               | '(' expression ')' instruction tELSE instruction    { $$ = new mml::if_else_node(LINE, $2, $4, $6);                                                                           }
-               | '(' expression ')' instruction tELIF if_instruction { $$ = new mml::if_else_node(LINE, $2, $4, $6);                                                                           }
+if_instruction : '(' expression ')' instruction                      { $$ = new mml::if_node(LINE, $2, $4);                             }
+               | '(' expression ')' instruction tELSE instruction    { $$ = new mml::if_else_node(LINE, $2, $4, $6);                    }
+               | '(' expression ')' instruction tELIF if_instruction { $$ = new mml::if_else_node(LINE, $2, $4, $6);                    }
                ;
 
-instructions   : /* empty */  instruction                            { $$ = new cdk::sequence_node(LINE, $1);                                                                                  }
-               | instructions instruction                            { $$ = new cdk::sequence_node(LINE, $2, $1);                                                                              }
+instructions   : /* empty */  instruction                            { $$ = new cdk::sequence_node(LINE, $1);                           }
+               | instructions instruction                            { $$ = new cdk::sequence_node(LINE, $2, $1);                       }
                ;
 
-data_type      : tTYPE_INT                                           { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT);                                                                     }
-               | tTYPE_DOUBLE                                        { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE);                                                                  }
-               | tTYPE_STRING                                        { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING);                                                                  }
+data_type      : tTYPE_INT                                           { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT);              }
+               | tTYPE_DOUBLE                                        { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE);           }
+               | tTYPE_STRING                                        { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING);           }
                /* | tTYPE_VOID */
                | tTYPE_AUTO                                          { /* TODO */ }
                ;
 
-expression     : tINTEGER                                            { $$ = new cdk::integer_node(LINE, $1);                                                                                   }
-               | tDOUBLE                                             { $$ = new cdk::double_node(LINE, $1);                                                                                    }
-               | string                                              { $$ = new cdk::string_node(LINE, $1);                                                                                    }
-               | tNULL                                               { $$ = new mml::null_node(LINE);                                                                                          }
-               | lvalue                                              { $$ = new cdk::rvalue_node(LINE, $1);                                                                                    }
-               | lvalue '=' expression                               { $$ = new cdk::assignment_node(LINE, $1, $3);                                                                            }
-               | expression '+' expression                           { $$ = new cdk::add_node(LINE, $1, $3);                                                                                   }
-               | expression '-' expression                           { $$ = new cdk::sub_node(LINE, $1, $3);                                                                                   }
-               | expression '*' expression                           { $$ = new cdk::mul_node(LINE, $1, $3);                                                                                   }
-               | expression '/' expression                           { $$ = new cdk::div_node(LINE, $1, $3);                                                                                   }
-               | expression '%' expression                           { $$ = new cdk::mod_node(LINE, $1, $3);                                                                                   }
-               | expression  '<' expression                          { $$ = new cdk::lt_node(LINE, $1, $3);                                                                                    }
-               | expression tLE  expression                          { $$ = new cdk::le_node(LINE, $1, $3);                                                                                    }
-               | expression tEQ  expression                          { $$ = new cdk::eq_node(LINE, $1, $3);                                                                                    }
-               | expression tGE  expression                          { $$ = new cdk::ge_node(LINE, $1, $3);                                                                                    }
-               | expression  '>' expression                          { $$ = new cdk::gt_node(LINE, $1, $3);                                                                                    }
-               | expression tNE  expression                          { $$ = new cdk::ne_node(LINE, $1, $3);                                                                                    }
-               | expression tAND  expression                         { $$ = new cdk::and_node(LINE, $1, $3);                                                                                   }
-               | expression tOR  expression                          { $$ = new cdk::or_node (LINE, $1, $3);                                                                                   }
-               | '-' expression %prec tUNARY                         { $$ = new cdk::neg_node(LINE, $2);                                                                                       }
-               | '+' expression %prec tUNARY                         { $$ = new mml::identity_node(LINE, $2);                                                                                  }
-               | '~' expression                                      { $$ = new cdk::not_node(LINE, $2);                                                                                       }
-               | tREAD                                               { $$ = new mml::read_node(LINE);                                                                                          }
+expression     : tINTEGER                                            { $$ = new cdk::integer_node(LINE, $1);                            }
+               | tDOUBLE                                             { $$ = new cdk::double_node(LINE, $1);                             }
+               | string                                              { $$ = new cdk::string_node(LINE, $1);                             }
+               | tNULL                                               { $$ = new mml::null_node(LINE);                                   }
+               | lvalue                                              { $$ = new cdk::rvalue_node(LINE, $1);                             }
+               | lvalue '=' expression                               { $$ = new cdk::assignment_node(LINE, $1, $3);                     }
+               | expression '+' expression                           { $$ = new cdk::add_node(LINE, $1, $3);                            }
+               | expression '-' expression                           { $$ = new cdk::sub_node(LINE, $1, $3);                            }
+               | expression '*' expression                           { $$ = new cdk::mul_node(LINE, $1, $3);                            }
+               | expression '/' expression                           { $$ = new cdk::div_node(LINE, $1, $3);                            }
+               | expression '%' expression                           { $$ = new cdk::mod_node(LINE, $1, $3);                            }
+               | expression  '<' expression                          { $$ = new cdk::lt_node(LINE, $1, $3);                             }
+               | expression tLE  expression                          { $$ = new cdk::le_node(LINE, $1, $3);                             }
+               | expression tEQ  expression                          { $$ = new cdk::eq_node(LINE, $1, $3);                             }
+               | expression tGE  expression                          { $$ = new cdk::ge_node(LINE, $1, $3);                             }
+               | expression  '>' expression                          { $$ = new cdk::gt_node(LINE, $1, $3);                             }
+               | expression tNE  expression                          { $$ = new cdk::ne_node(LINE, $1, $3);                             }
+               | expression tAND  expression                         { $$ = new cdk::and_node(LINE, $1, $3);                            }
+               | expression tOR  expression                          { $$ = new cdk::or_node (LINE, $1, $3);                            }
+               | '-' expression %prec tUNARY                         { $$ = new cdk::neg_node(LINE, $2);                                }
+               | '+' expression %prec tUNARY                         { $$ = new mml::identity_node(LINE, $2);                           }
+               | '~' expression                                      { $$ = new cdk::not_node(LINE, $2);                                }
+               | tREAD                                               { $$ = new mml::read_node(LINE);                                   }
                /* | tIDENTIFIER '(' opt_expressions ')'                 { $$ = new mml::function_call_node(LINE, *$1, $3); delete $1;       } */
-               | tSIZEOF '(' expression ')'                          { $$ = new mml::sizeof_node(LINE, $3);   }
-               | '(' expression ')'                                  { $$ = $2;                                                                                                                }
-               | '[' expression ']'                                  { $$ = new mml::stack_alloc_node(LINE, $2);                                                                               }
-               | lvalue '?'                                          { $$ = new mml::address_of_node(LINE, $1);                                                                                }
+               | tSIZEOF '(' expression ')'                          { $$ = new mml::sizeof_node(LINE, $3);                             }
+               | '(' expression ')'                                  { $$ = $2;                                                         }
+               | '[' expression ']'                                  { $$ = new mml::stack_alloc_node(LINE, $2);                        }
+               | lvalue '?'                                          { $$ = new mml::address_of_node(LINE, $1);                         }
                ;
 
-expressions    : expression                                          { $$ = new cdk::sequence_node(LINE, $1);                                                                                  }
-               | expressions ',' expression                          { $$ = new cdk::sequence_node(LINE, $3, $1);                                                                              }
+expressions    : expression                                          { $$ = new cdk::sequence_node(LINE, $1);                           }
+               | expressions ',' expression                          { $$ = new cdk::sequence_node(LINE, $3, $1);                       }
                ;
 
-string         : tSTRING                                             { $$ = $1;                                                                                                                }
-               | string tSTRING                                      { $$ = $1; $$->append(*$2); delete $2;                                                                                    }
+string         : tSTRING                                             { $$ = $1;                                                         }
+               | string tSTRING                                      { $$ = $1; $$->append(*$2); delete $2;                             }
                ;
 
-lvalue         : tIDENTIFIER                                         { $$ = new cdk::variable_node(LINE, $1); }
+lvalue         : tIDENTIFIER                                         { $$ = new cdk::variable_node(LINE, $1);                           }
                ;
 
 %%
