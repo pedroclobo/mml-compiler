@@ -12,6 +12,11 @@
 #define yyerror LexerError
 %}
 %x X_STRING X_COMMENT X_ESCAPE
+
+DIGIT                  [0-9]
+INT                    {DIGIT}+
+DOUBLE                 {DIGIT}+"."{DIGIT}*|{DIGIT}*"."{DIGIT}+
+
 %%
   yydebug=1; set_debug(1);
 
@@ -71,7 +76,8 @@
 <X_ESCAPE>r            *yylval.s += '\r'; yy_pop_state();
 <X_ESCAPE>[0-7]{1,3}   *yylval.s += (char)strtoul(yytext, NULL, 8); yy_pop_state();
 
-[0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
+{INT}                  yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
+{DOUBLE}               yylval.d = strtod(yytext, nullptr); return tDOUBLE;
 
 [-()<>=+*/%;{}.]       return *yytext;
 
