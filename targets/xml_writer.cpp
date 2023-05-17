@@ -38,7 +38,7 @@ void mml::xml_writer::do_next_node(mml::next_node * const node, int lvl) {
 void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
   openTag(node, lvl);
   if (node->retval() != nullptr) {
-    node->retval()->accept(this, lvl + 4);
+    node->retval()->accept(this, lvl + 2);
   }
   closeTag(node, lvl);
 }
