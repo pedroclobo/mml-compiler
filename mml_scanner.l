@@ -62,6 +62,8 @@ EXPONENT               [eE][-+]?{DIGIT}+
 "begin"                  return tBEGIN;
 "end"                    return tEND;
 
+"->"                     return tARROW;
+
 [A-Za-z][A-Za-z0-9_]*    yylval.s = new std::string(yytext); return tIDENTIFIER;
 
 \"                       yy_push_state(X_STRING); yylval.s = new std::string("");

@@ -45,6 +45,7 @@
 %token tPRINT tPRINTLN tREAD tNULL tSIZEOF
 %token tBEGIN tEND
 %token tAND tOR tNE tLE tGE
+%token tARROW
 
 %right '='
 %left tOR
@@ -177,7 +178,7 @@ expression      : tINTEGER                                             { $$ = ne
                 | '(' expression ')'                                   { $$ = $2;                                                         }
                 | '[' expression ']'                                   { $$ = new mml::stack_alloc_node(LINE, $2);                        }
                 | lvalue '?'                                           { $$ = new mml::address_of_node(LINE, $1);                         }
-                | '(' variables ')' '-''>' data_type block             { $$ = new mml::function_definition_node(LINE, $2, $6, $7);        }
+                | '(' variables ')' tARROW data_type block             { $$ = new mml::function_definition_node(LINE, $2, $5, $6);        }
                 | expression '(' ')'                                   { $$ = new mml::function_call_node(LINE, $1, nullptr);             }
                 | expression '(' expressions ')'                       { $$ = new mml::function_call_node(LINE, $1, $3);                  }
                 | '@' '(' expressions ')'                              { $$ = new mml::function_call_node(LINE, new cdk::integer_node(LINE, 1), $3); /* FIXME */ }
