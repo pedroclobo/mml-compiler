@@ -65,9 +65,6 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
 void mml::postfix_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
   // EMPTY
 }
-void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int lvl) {
-  // EMPTY
-}
 void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
   // generate the main function (RTS mandates that its name be "_main")
   _pf.TEXT();
