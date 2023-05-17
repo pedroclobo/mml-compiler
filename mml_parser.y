@@ -65,7 +65,7 @@
 %type <expression> expression initializer opt_initializer
 %type <block> block main_block
 %type <lvalue> lvalue
-%type <type> data_type opt_data_type function_type
+%type <type> data_type function_type data_types
 %type <s> string
 %type <i> qualifier
 
@@ -103,9 +103,9 @@ opt_initializer : /* empty */                                        { $$ = null
                 ;
 
 qualifier      : tPUBLIC                                             { $$ = tPUBLIC;                                                    }
-			   | tFOREIGN                                            { $$ = tFOREIGN;                                                   }
-			   | tFORWARD                                            { $$ = tFORWARD;                                                   }
-			   ;
+               | tFOREIGN                                            { $$ = tFOREIGN;                                                   }
+               | tFORWARD                                            { $$ = tFORWARD;                                                   }
+               ;
 
 declarations   : /* empty */  declaration                            { $$ = new cdk::sequence_node(LINE, $1);                           }
                | declarations declaration                            { $$ = new cdk::sequence_node(LINE, $2, $1);                       }
@@ -142,12 +142,13 @@ data_type      : tTYPE_INT                                           { $$ = cdk:
                | function_type                                       { $$ = $1;                                                         }
                ;
 
-opt_data_type  : /* empty */                                         { $$ = nullptr;                                                    }
-               | data_type                                           { $$ = $1;                                                         }
-			   ;
+data_types     : /* empty */                                         { $$ = nullptr;                                                    }
+               | data_type                                           { $$ = nullptr;                                                    }
+               | data_types ',' data_type                            { $$ = nullptr;                                                    }
+               ;
 
-function_type  : data_type '<' opt_data_type '>'                     { /* TODO */ }
-			   ;
+function_type  : data_type '<' data_types '>'                        { /* TODO */ }
+               ;
 
 expression     : tINTEGER                                            { $$ = new cdk::integer_node(LINE, $1);                            }
                | tDOUBLE                                             { $$ = new cdk::double_node(LINE, $1);                             }
@@ -176,29 +177,30 @@ expression     : tINTEGER                                            { $$ = new 
                | '(' expression ')'                                  { $$ = $2;                                                         }
                | '[' expression ']'                                  { $$ = new mml::stack_alloc_node(LINE, $2);                        }
                | lvalue '?'                                          { $$ = new mml::address_of_node(LINE, $1);                         }
-               | '(' ')' '-''>' data_type block                      { $$ = new mml::function_definition_node(LINE, nullptr, $5, $6);   }
                | '(' variables ')' '-''>' data_type block            { $$ = new mml::function_definition_node(LINE, $2, $6, $7);        }
                | expression '(' ')'                                  { $$ = new mml::function_call_node(LINE, $1, nullptr);             }
                | expression '(' expressions ')'                      { $$ = new mml::function_call_node(LINE, $1, $3);                  }
+               | '@' '(' expressions ')'                             { $$ = new mml::function_call_node(LINE, new cdk::integer_node(LINE, 1), $3); /* FIXME */      }
                ;
 
 expressions    : expression                                          { $$ = new cdk::sequence_node(LINE, $1);                           }
                | expressions ',' expression                          { $$ = new cdk::sequence_node(LINE, $3, $1);                       }
                ;
 
-variable       : qualifier data_type tIDENTIFIER                     { $$ = new mml::declaration_node(LINE, $1, $2, *$3, nullptr);      }
+variable       : data_type tIDENTIFIER                               { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, nullptr); }
                ;
 
-variables 	   : variable                                            { $$ = new cdk::sequence_node(LINE, $1);                           }
-			   | variables ',' variable                              { $$ = new cdk::sequence_node(LINE, $3, $1);                       }
-			   ;
+variables      : /* empty */                                         { $$ = new cdk::sequence_node(LINE);                               }
+               | variable                                            { $$ = new cdk::sequence_node(LINE, $1);                           }
+               | variables ',' variable                              { $$ = new cdk::sequence_node(LINE, $3, $1);                       }
+               ;
 
 string         : tSTRING                                             { $$ = $1;                                                         }
                | string tSTRING                                      { $$ = $1; $$->append(*$2); delete $2;                             }
                ;
 
 lvalue         : expression '[' expression ']'                       { $$ = new mml::index_node(LINE, $1, $3);                          } 
-			   | tIDENTIFIER                                         { $$ = new cdk::variable_node(LINE, $1);                           }
+               | tIDENTIFIER                                         { $$ = new cdk::variable_node(LINE, $1);                           }
                ;
 
 %%

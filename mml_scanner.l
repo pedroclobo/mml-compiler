@@ -15,12 +15,13 @@
 
 DIGIT                  [0-9]
 INT                    {DIGIT}+
-DOUBLE                 {DIGIT}+"."{DIGIT}*|{DIGIT}*"."{DIGIT}+
+DOUBLE                 {DIGIT}+"."{DIGIT}*|({DIGIT}*"."{DIGIT}+|{DIGIT}+{EXPONENT}){EXPONENT}?
+EXPONENT               [eE][-+]?{DIGIT}+
 
 %%
   yydebug=1; set_debug(1);
 
-"--".*$                ; /* ignore comments */
+"//".*$                ; /* ignore comments */
 
 "/*"                   yy_push_state(X_COMMENT);
 <X_COMMENT>"/*"        yy_push_state(X_COMMENT);
@@ -33,7 +34,6 @@ DOUBLE                 {DIGIT}+"."{DIGIT}*|{DIGIT}*"."{DIGIT}+
 "!="                   return tNE; 
 "&&"                   return tAND;
 "||"                   return tOR;
-"~"                    return *yytext;
 
 "int"                  return tTYPE_INT;
 "double"               return tTYPE_DOUBLE;
@@ -79,7 +79,7 @@ DOUBLE                 {DIGIT}+"."{DIGIT}*|{DIGIT}*"."{DIGIT}+
 {INT}                  yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 {DOUBLE}               yylval.d = strtod(yytext, nullptr); return tDOUBLE;
 
-[-()<>=+*/%;{}.]       return *yytext;
+[-()<>=+*/%;{}.,@~[\]?] return *yytext;
 
 [ \t\n]+               ; /* ignore whitespace */
 
