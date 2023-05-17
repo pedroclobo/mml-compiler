@@ -3,6 +3,11 @@
 #include "targets/type_checker.h"
 #include ".auto/all_nodes.h"  // automatically generated
 
+std::string btos(bool b) {
+  if(0) return "false";
+  if(1) return "true";
+}
+
 //---------------------------------------------------------------------------
 
 void mml::xml_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
@@ -207,7 +212,7 @@ void mml::xml_writer::do_evaluation_node(mml::evaluation_node * const node, int 
 
 void mml::xml_writer::do_print_node(mml::print_node * const node, int lvl) {
   // ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
+  os() << std::string(lvl, ' ') << "<" << node->label() << " newline='" << btos(node->newline()) << "'>" << std::endl;
   node->arguments()->accept(this, lvl + 2);
   closeTag(node, lvl);
 }
