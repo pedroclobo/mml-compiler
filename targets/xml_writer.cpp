@@ -8,6 +8,13 @@ std::string btos(bool b) {
   if(1) return "true";
 }
 
+std::string ttos(std::shared_ptr<cdk::basic_type> type) {
+  if (type->name() == cdk::TYPE_INT) return "int";
+  if (type->name() == cdk::TYPE_STRING) return "string";
+  if (type->name() == cdk::TYPE_DOUBLE) return "double";
+  return "invalid";
+}
+
 //---------------------------------------------------------------------------
 
 void mml::xml_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
@@ -67,7 +74,7 @@ void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
   closeTag(node, lvl);
 }
 void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
-  openTag(node, lvl);
+  os() << std::string(lvl, ' ') << "<" << node->label() << " type='" << ttos(node->type()) << "' identifier='" << node->identifier() << "'>" << std::endl;
   if (node->initializer()) {
     node->initializer()->accept(this, lvl + 2);
   }
