@@ -248,8 +248,8 @@ void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, 
 void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  for (size_t ix = 0; ix < node->arguments()->size(); ix++) {
-    auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(ix));
+  for (size_t i = 0; i < node->arguments()->size(); i++) {
+    auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
     child->accept(this, lvl); // expression to print
 
     if (child->is_typed(cdk::TYPE_INT)) {
