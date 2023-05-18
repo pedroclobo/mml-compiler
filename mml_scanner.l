@@ -78,6 +78,8 @@ EXPONENT               [eE][-+]?{DIGIT}+
 <X_ESCAPE>r              *yylval.s += '\r'; yy_pop_state();
 <X_ESCAPE>[0-7]{1,3}     *yylval.s += (char)strtoul(yytext, NULL, 8); yy_pop_state();
 
+0[0-7]+                  yylval.i = strtoul(yytext, NULL, 8); return tINTEGER;
+
 {INT}                    yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 {DOUBLE}                 yylval.d = strtod(yytext, nullptr); return tDOUBLE;
 
