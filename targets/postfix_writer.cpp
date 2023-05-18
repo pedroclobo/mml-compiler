@@ -16,7 +16,10 @@ void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl)
   // EMPTY
 }
 void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+  node->argument()->accept(this, lvl);
+  _pf.INT(0);
+  _pf.EQ();
 }
 void mml::postfix_writer::do_and_node(cdk::and_node * const node, int lvl) {
   // EMPTY

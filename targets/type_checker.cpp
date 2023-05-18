@@ -25,7 +25,16 @@ void mml::type_checker::do_double_node(cdk::double_node *const node, int lvl) {
   // EMPTY
 }
 void mml::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
-  // EMPTY
+  ASSERT_UNSPEC;
+  node->argument()->accept(this, lvl);
+  if (node->argument()->is_typed(cdk::TYPE_INT)) {
+    node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  } else if (node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+    node->argument()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  } else {
+    throw std::string("wrong type in unary logical expression");
+  }
 }
 void mml::type_checker::do_and_node(cdk::and_node *const node, int lvl) {
   // EMPTY
