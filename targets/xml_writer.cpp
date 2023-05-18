@@ -190,7 +190,7 @@ void mml::xml_writer::do_variable_node(cdk::variable_node * const node, int lvl)
 void mml::xml_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   // ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
-  node->lvalue()->accept(this, lvl + 4);
+  node->lvalue()->accept(this, lvl + 2);
   closeTag(node, lvl);
 }
 
