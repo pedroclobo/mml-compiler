@@ -37,10 +37,32 @@ void mml::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
   }
 }
 void mml::type_checker::do_and_node(cdk::and_node *const node, int lvl) {
-  // EMPTY
+  ASSERT_UNSPEC;
+  node->left()->accept(this, lvl + 2);
+  if (!node->left()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("integer expression expected in binary expression");
+  }
+
+  node->right()->accept(this, lvl + 2);
+  if (!node->right()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("integer expression expected in binary expression");
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
-  // EMPTY
+  ASSERT_UNSPEC;
+  node->left()->accept(this, lvl + 2);
+  if (!node->left()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("integer expression expected in binary expression");
+  }
+
+  node->right()->accept(this, lvl + 2);
+  if (!node->right()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("integer expression expected in binary expression");
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_address_of_node(mml::address_of_node * const node, int lvl) {
   // EMPTY
