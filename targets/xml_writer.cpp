@@ -108,12 +108,19 @@ void mml::xml_writer::do_function_definition_node(mml::function_definition_node 
 }
 void mml::xml_writer::do_program_node(mml::program_node * const node, int lvl) {
   openTag(node, lvl);
+
+  openTag("declarations", lvl + 2);
   if (node->declarations()) {
-    node->declarations()->accept(this, lvl + 2);
+    node->declarations()->accept(this, lvl + 4);
   }
+  closeTag("declarations", lvl + 2);
+
+  openTag("program", lvl + 2);
   if (node->block()) {
-    node->block()->accept(this, lvl + 2);
+    node->block()->accept(this, lvl + 4);
   }
+  closeTag("program", lvl + 2);
+
   closeTag(node, lvl);
 }
 
