@@ -138,8 +138,8 @@ instructions    : /* empty */  instruction                             { $$ = ne
 data_type       : tTYPE_INT                                            { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT);              }
                 | tTYPE_DOUBLE                                         { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE);           }
                 | tTYPE_STRING                                         { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING);           }
-                | tTYPE_VOID                                           { /* TODO */                                                       }
-                | '[' data_type ']'                                    { /* TODO */                                                       }
+                | tTYPE_VOID                                           { $$ = nullptr; /* TODO */                                         }
+                | '[' data_type ']'                                    { $$ = nullptr; /* TODO */                                         }
                 | function_type                                        { $$ = $1;                                                         }
                 ;
 
@@ -148,7 +148,7 @@ data_types      : /* empty */                                          { $$ = nu
                 | data_types ',' data_type                             { $$ = nullptr;                                                    }
                 ;
 
-function_type   : data_type '<' data_types '>'                         { /* TODO */ }
+function_type   : data_type '<' data_types '>'                         { $$ = nullptr; /* TODO */                                         }
                 ;
 
 expression      : tINTEGER                                             { $$ = new cdk::integer_node(LINE, $1);                            }
