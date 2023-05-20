@@ -42,10 +42,12 @@ void mml::xml_writer::do_null_node(mml::null_node * const node, int lvl) {
   // EMPTY
 }
 void mml::xml_writer::do_stop_node(mml::stop_node * const node, int lvl) {
-  // EMPTY
+  os() << std::string(lvl, ' ') << "<" << node->label() << " level='" << node->level() << "'>" << std::endl;
+  closeTag(node, lvl);
 }
 void mml::xml_writer::do_next_node(mml::next_node * const node, int lvl) {
-  // EMPTY
+  os() << std::string(lvl, ' ') << "<" << node->label() << " level='" << node->level() << "'>" << std::endl;
+  closeTag(node, lvl);
 }
 void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
   openTag(node, lvl);
