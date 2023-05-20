@@ -65,12 +65,19 @@ void mml::xml_writer::do_stack_alloc_node(mml::stack_alloc_node * const node, in
 }
 void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
   openTag(node, lvl);
+
+  openTag("declarations", lvl + 2);
   if (node->declarations()) {
-    node->declarations()->accept(this, lvl + 2);
+    node->declarations()->accept(this, lvl + 4);
   }
+  closeTag("declarations", lvl + 2);
+
+  openTag("instructions", lvl + 2);
   if (node->instructions()) {
-    node->instructions()->accept(this, lvl + 2);
+    node->instructions()->accept(this, lvl + 4);
   }
+  closeTag("instructions", lvl + 2);
+
   closeTag(node, lvl);
 }
 void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
