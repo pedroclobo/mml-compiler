@@ -93,7 +93,6 @@ declaration     : qualifier data_type tIDENTIFIER opt_initializer ';'  { $$ = ne
                 | qualifier tIDENTIFIER opt_initializer ';'            { $$ = new mml::declaration_node(LINE, $1, nullptr, *$2, $3);      }
                 | data_type tIDENTIFIER opt_initializer ';'            { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, $3);      }
                 | tTYPE_AUTO tIDENTIFIER opt_initializer ';'           { $$ = new mml::declaration_node(LINE, tPUBLIC, nullptr, *$2, $3); } // FIXME
-                | tIDENTIFIER opt_initializer ';'                      { $$ = new mml::declaration_node(LINE, tPUBLIC, nullptr, *$1, $2); }
                 ;
 
 initializer     : '=' expression                                       { $$ = $2;                                                         }
@@ -200,8 +199,8 @@ string          : tSTRING                                              { $$ = $1
                 | string tSTRING                                       { $$ = $1; $$->append(*$2); delete $2;                             }
                 ;
 
-lvalue          : expression '[' expression ']'                        { $$ = new mml::index_node(LINE, $1, $3);                          }
-                | tIDENTIFIER                                          { $$ = new cdk::variable_node(LINE, $1);                           }
+lvalue          : tIDENTIFIER                                          { $$ = new cdk::variable_node(LINE, $1);                           }
+                | expression '[' expression ']'                        { $$ = new mml::index_node(LINE, $1, $3);                          }
                 ;
 
 %%
