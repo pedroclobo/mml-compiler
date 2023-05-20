@@ -60,7 +60,11 @@ void mml::xml_writer::do_index_node(mml::index_node * const node, int lvl) {
   // EMPTY
 }
 void mml::xml_writer::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
-  // EMPTY
+  openTag(node, lvl);
+  if (node->expression()) {
+    node->expression()->accept(this, lvl + 2);
+  }
+  closeTag(node, lvl);
 }
 void mml::xml_writer::do_stack_alloc_node(mml::stack_alloc_node * const node, int lvl) {
   // EMPTY
