@@ -69,6 +69,8 @@ EXPONENT               [eE][-+]?{DIGIT}+
 \"                       yy_push_state(X_STRING); yylval.s = new std::string("");
 <X_STRING>\"             yy_pop_state(); return tSTRING;
 <X_STRING>\\             yy_push_state(X_ESCAPE);
+<X_STRING>\0             yyerror("Null terminator in string");
+<X_STRING>\n             yyerror("Newline in string");
 <X_STRING>.              *yylval.s += *yytext;
 
 <X_ESCAPE>\"             *yylval.s += '"'; yy_pop_state();
