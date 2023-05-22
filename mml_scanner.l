@@ -14,7 +14,7 @@
 %x X_STRING X_COMMENT X_ESCAPE
 
 DIGIT                  [0-9]
-INT                    {DIGIT}+
+INT                    0|[1-9]{DIGIT}*
 DOUBLE                 {DIGIT}+"."{DIGIT}*|({DIGIT}*"."{DIGIT}+|{DIGIT}+{EXPONENT}){EXPONENT}?
 EXPONENT               [eE][-+]?{DIGIT}+
 
