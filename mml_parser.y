@@ -42,7 +42,7 @@
 %token <d> tDOUBLE
 %token <s> tIDENTIFIER tSTRING
 %token tTYPE_INT tTYPE_DOUBLE tTYPE_STRING tTYPE_VOID tTYPE_AUTO
-%token tPUBLIC tFORWARD tFOREIGN
+%token tPUBLIC tFORWARD tFOREIGN tPRIVATE
 %token tIF tELIF tELSE tWHILE tSTOP tNEXT tRETURN
 %token tPRINT tPRINTLN tREAD tNULL tSIZEOF
 %token tBEGIN tEND
@@ -63,15 +63,14 @@
 %nonassoc tIF
 %nonassoc tELSE tELIF
 
-%type <node> file instruction if_instruction declaration variable
-%type <sequence> instructions declarations expressions variables
+%type <node> file instruction if_instruction declaration variable p_declaration
+%type <sequence> instructions declarations expressions variables p_declarations
 %type <expression> expression initializer opt_initializer
 %type <block> block main_block
 %type <lvalue> lvalue
 %type <type> data_type function_type
 %type <types> data_types
 %type <s> string
-%type <i> qualifier
 
 %{
 //-- The rules below will be included in yyparse, the main parsing function.
@@ -83,19 +82,23 @@ file            : declarations                                         { compile
                 | declarations tBEGIN main_block tEND                  { compiler->ast(new mml::program_node(LINE, $1, $3));                                                       }
                 ;
 
-main_block      : declarations instructions                            { $$ = new mml::block_node(LINE, $1, $2);                                                                   }
-                | declarations                                         { $$ = new mml::block_node(LINE, $1, new cdk::sequence_node(LINE));                                         }
+main_block      : p_declarations instructions                          { $$ = new mml::block_node(LINE, $1, $2);                                                                   }
+                | p_declarations                                       { $$ = new mml::block_node(LINE, $1, new cdk::sequence_node(LINE));                                         }
                 | instructions                                         { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), $1);                                         }
                 ;
 
 block           : '{' main_block '}'                                   { $$ = $2;                                                                                                  }
                 ;
 
-declaration     : qualifier data_type tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, $1, $2, *$3, $4);                                                    }
-                | qualifier            tIDENTIFIER initializer ';'     { $$ = new mml::declaration_node(LINE, $1, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3);      }
-                | qualifier tTYPE_AUTO tIDENTIFIER initializer ';'     { $$ = new mml::declaration_node(LINE, $1, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$3, $4);      }
-                |           data_type tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, $3);                                               }
-                |           tTYPE_AUTO tIDENTIFIER initializer ';'     { $$ = new mml::declaration_node(LINE, tPUBLIC, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3); }
+declaration     : tPUBLIC             tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, tPUBLIC, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3); }
+                | tPUBLIC  tTYPE_AUTO tIDENTIFIER initializer ';'      { $$ = new mml::declaration_node(LINE, tPUBLIC, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$3, $4); }
+                | tPUBLIC  data_type  tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, tPUBLIC, $2, *$3, $4);                                               }
+                | tFORWARD data_type  tIDENTIFIER ';'                  { $$ = new mml::declaration_node(LINE, tFORWARD, $2, *$3, nullptr);                                         }
+                | tFOREIGN data_type  tIDENTIFIER ';'                  { $$ = new mml::declaration_node(LINE, tFOREIGN, $2, *$3, nullptr);                                         }
+                | p_declaration                                        { $$ = $1;                                                                                                  }
+
+p_declaration   : data_type  tIDENTIFIER opt_initializer ';'           { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, $3);                                              }
+                | tTYPE_AUTO tIDENTIFIER initializer ';'               { $$ = new mml::declaration_node(LINE, tPRIVATE, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3);}
                 ;
 
 initializer     : '=' expression                                       { $$ = $2;                                                                                                  }
@@ -105,9 +108,8 @@ opt_initializer : /* empty */                                          { $$ = nu
                 | initializer                                          { $$ = $1;                                                                                                  }
                 ;
 
-qualifier       : tPUBLIC                                              { $$ = tPUBLIC;                                                                                             }
-                | tFOREIGN                                             { $$ = tFOREIGN;                                                                                            }
-                | tFORWARD                                             { $$ = tFORWARD;                                                                                            }
+p_declarations  : /* empty */    p_declaration                         { $$ = new cdk::sequence_node(LINE);                                                                        }
+                | p_declarations p_declaration                         { $$ = new cdk::sequence_node(LINE, $2, $1);                                                                }
                 ;
 
 declarations    : /* empty */  declaration                             { $$ = new cdk::sequence_node(LINE, $1);                                                                    }
@@ -147,9 +149,9 @@ data_type       : tTYPE_INT                                            { $$ = cd
 
 data_types      : /* empty */                                          { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>();                                                 }
                 | data_type                                            {
-				                                                         $$ = new std::vector<std::shared_ptr<cdk::basic_type>>();
-																		 $$->push_back($1);
-																	   }
+                                                                         $$ = new std::vector<std::shared_ptr<cdk::basic_type>>();
+                                                                         $$->push_back($1);
+                                                                       }
                 | data_types ',' data_type                             { $$ = $1; $$->push_back($3);                                                                               }
                 ;
 
