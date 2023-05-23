@@ -13,6 +13,7 @@ static std::string qtos(int qualifier) {
   if (qualifier == tPUBLIC) return "public";
   if (qualifier == tFORWARD) return "forward";
   if (qualifier == tFOREIGN) return "foreign";
+  if (qualifier == tPRIVATE) return "private";
   return "invalid qualifier";
 }
 
