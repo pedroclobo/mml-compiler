@@ -287,29 +287,22 @@ void mml::xml_writer::do_program_node(mml::program_node * const node, int lvl) {
 void mml::xml_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
   openTag(node, lvl);
   openTag("function", lvl + 2);
-  // node->function()->accept(this, lvl + 4);
+  node->function()->accept(this, lvl + 4);
   closeTag("function", lvl + 2);
   openTag("arguments", lvl + 2);
-  // node->arguments()->accept(this, lvl + 4);
+  node->arguments()->accept(this, lvl + 4);
   closeTag("arguments", lvl + 2);
   closeTag(node, lvl);
 }
 
 void mml::xml_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
   openTag(node, lvl);
-
   openTag("arguments", lvl + 2);
-  if (node->arguments()) {
-    node->arguments()->accept(this, lvl + 4);
-  }
+  node->arguments()->accept(this, lvl + 4);
   closeTag("arguments", lvl + 2);
-
   openTag("block", lvl + 2);
-  if (node->block()) {
-    node->block()->accept(this, lvl + 4);
-  }
+  node->block()->accept(this, lvl + 4);
   closeTag("block", lvl + 2);
-
   closeTag(node, lvl);
 }
 
@@ -325,27 +318,18 @@ void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
 
 void mml::xml_writer::do_index_node(mml::index_node * const node, int lvl) {
   openTag(node, lvl);
-
-  if (node->base()) {
-    openTag("base", lvl + 2);
-    node->base()->accept(this, lvl + 4);
-    closeTag("base", lvl + 2);
-  }
-
-  if (node->index()) {
-    openTag("index", lvl + 2);
-    node->index()->accept(this, lvl + 4);
-    closeTag("index", lvl + 2);
-  }
-
+  openTag("base", lvl + 2);
+  node->base()->accept(this, lvl + 4);
+  closeTag("base", lvl + 2);
+  openTag("index", lvl + 2);
+  node->index()->accept(this, lvl + 4);
+  closeTag("index", lvl + 2);
   closeTag(node, lvl);
 }
 
 void mml::xml_writer::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
   openTag(node, lvl);
-  if (node->expression()) {
-    node->expression()->accept(this, lvl + 2);
-  }
+  node->expression()->accept(this, lvl + 2);
   closeTag(node, lvl);
 }
 
