@@ -17,6 +17,18 @@ static std::string qtos(int qualifier) {
   return "invalid qualifier";
 }
 
+static std::string ttos(std::shared_ptr<cdk::basic_type> type) {
+  std::string type_string = type->to_string();
+  size_t start_pos = 0;
+
+  while ((start_pos = type_string.find("<", start_pos)) != std::string::npos) {
+      type_string.replace(start_pos, 1, "&lt;");
+      start_pos += 4;
+  }
+
+  return type_string;
+}
+
 //---------------------------------------------------------------------------
 
 void mml::xml_writer::do_null_node(mml::null_node * const node, int lvl) {
@@ -242,7 +254,9 @@ void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
 }
 
 void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
-  os() << std::string(lvl, ' ') << "<" << node->label() << " qualifier='" << qtos(node->qualifier()) 
+  os() << std::string(lvl, ' ') << "<" << node->label()
+       << " qualifier='" << qtos(node->qualifier())
+       << "' type='" << ttos(node->type())
        << "' identifier='" << node->identifier() << "'>" << std::endl;
 
   if (node->initializer()) {
