@@ -63,8 +63,8 @@
 %nonassoc tIF
 %nonassoc tELSE tELIF
 
-%type <node> file instruction if_instruction declaration variable p_declaration
-%type <sequence> instructions declarations expressions variables p_declarations
+%type <node> file instruction if_instruction declaration variable
+%type <sequence> instructions declarations expressions variables
 %type <expression> expression initializer opt_initializer
 %type <block> block
 %type <lvalue> lvalue
@@ -82,8 +82,8 @@ file            : declarations                                         { compile
                 | declarations tBEGIN block tEND                       { compiler->ast(new mml::program_node(LINE, $1, $3));                                                       }
                 ;
 
-block           : p_declarations instructions                          { $$ = new mml::block_node(LINE, $1, $2);                                                                   }
-                | p_declarations                                       { $$ = new mml::block_node(LINE, $1, new cdk::sequence_node(LINE));                                         }
+block           : declarations instructions                            { $$ = new mml::block_node(LINE, $1, $2);                                                                   }
+                | declarations                                         { $$ = new mml::block_node(LINE, $1, new cdk::sequence_node(LINE));                                         }
                 | instructions                                         { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), $1);                                         }
                 ;
 
@@ -92,9 +92,7 @@ declaration     : tPUBLIC             tIDENTIFIER opt_initializer ';'  { $$ = ne
                 | tPUBLIC  data_type  tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, tPUBLIC, $2, *$3, $4);                                               }
                 | tFORWARD data_type  tIDENTIFIER ';'                  { $$ = new mml::declaration_node(LINE, tFORWARD, $2, *$3, nullptr);                                         }
                 | tFOREIGN data_type  tIDENTIFIER ';'                  { $$ = new mml::declaration_node(LINE, tFOREIGN, $2, *$3, nullptr);                                         }
-                | p_declaration                                        { $$ = $1;                                                                                                  }
-
-p_declaration   : data_type  tIDENTIFIER opt_initializer ';'           { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, $3);                                              }
+                | data_type  tIDENTIFIER opt_initializer ';'           { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, $3);                                              }
                 | tTYPE_AUTO tIDENTIFIER initializer ';'               { $$ = new mml::declaration_node(LINE, tPRIVATE, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3);}
                 ;
 
@@ -103,10 +101,6 @@ initializer     : '=' expression                                       { $$ = $2
 
 opt_initializer : /* empty */                                          { $$ = nullptr;                                                                                             }
                 | initializer                                          { $$ = $1;                                                                                                  }
-                ;
-
-p_declarations  : /* empty */    p_declaration                         { $$ = new cdk::sequence_node(LINE);                                                                        }
-                | p_declarations p_declaration                         { $$ = new cdk::sequence_node(LINE, $2, $1);                                                                }
                 ;
 
 declarations    : /* empty */  declaration                             { $$ = new cdk::sequence_node(LINE, $1);                                                                    }
