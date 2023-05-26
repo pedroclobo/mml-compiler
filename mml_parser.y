@@ -189,7 +189,7 @@ expression      : tINTEGER                                             { $$ = ne
                 | '(' variables ')' tARROW data_type '{' block '}'     { $$ = new mml::function_definition_node(LINE, $2, $5, $7);                                                 }
                 | expression '(' ')'                                   { $$ = new mml::function_call_node(LINE, $1, new cdk::sequence_node(LINE));                                 }
                 | expression '(' expressions ')'                       { $$ = new mml::function_call_node(LINE, $1, $3);                                                           }
-                | '@' '(' expressions ')'                              { $$ = new mml::function_call_node(LINE, new cdk::integer_node(LINE, 1), $3); /* FIXME */                   }
+                | '@' '(' expressions ')'                              { $$ = new mml::function_call_node(LINE, nullptr, $3);                                                      }
                 ;
 
 expressions     : expression                                           { $$ = new cdk::sequence_node(LINE, $1);                                                                    }
