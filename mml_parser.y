@@ -184,6 +184,7 @@ expression      : tINTEGER                                             { $$ = ne
                 | expression '(' ')'                                   { $$ = new mml::function_call_node(LINE, $1, new cdk::sequence_node(LINE));                                 }
                 | expression '(' expressions ')'                       { $$ = new mml::function_call_node(LINE, $1, $3);                                                           }
                 | '@' '(' expressions ')'                              { $$ = new mml::function_call_node(LINE, nullptr, $3);                                                      }
+                | '@' '(' ')'                                          { $$ = new mml::function_call_node(LINE, nullptr, new cdk::sequence_node(LINE));                            }
                 ;
 
 expressions     : expression                                           { $$ = new cdk::sequence_node(LINE, $1);                                                                    }
