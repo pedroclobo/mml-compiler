@@ -190,7 +190,7 @@ expressions     : expression                                           { $$ = ne
                 | expressions ',' expression                           { $$ = new cdk::sequence_node(LINE, $3, $1);                                                                }
                 ;
 
-variable        : data_type tIDENTIFIER                                { $$ = new mml::declaration_node(LINE, tPUBLIC, $1, *$2, nullptr);                                          }
+variable        : data_type tIDENTIFIER                                { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, nullptr);                                         }
                 ;
 
 variables       : /* empty */                                          { $$ = new cdk::sequence_node(LINE);                                                                        }
