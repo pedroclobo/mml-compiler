@@ -87,13 +87,13 @@ block           : declarations instructions                            { $$ = ne
                 | instructions                                         { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), $1);                                          }
                 ;
 
-declaration     : tPUBLIC             tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, tPUBLIC, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3);  }
-                | tPUBLIC  tTYPE_AUTO tIDENTIFIER initializer ';'      { $$ = new mml::declaration_node(LINE, tPUBLIC, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$3, $4);  }
-                | tPUBLIC  data_type  tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, tPUBLIC, $2, *$3, $4);                                                }
-                | tFORWARD data_type  tIDENTIFIER ';'                  { $$ = new mml::declaration_node(LINE, tFORWARD, $2, *$3, nullptr);                                          }
-                | tFOREIGN data_type  tIDENTIFIER ';'                  { $$ = new mml::declaration_node(LINE, tFOREIGN, $2, *$3, nullptr);                                          }
-                | data_type  tIDENTIFIER opt_initializer ';'           { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, $3);                                               }
-                | tTYPE_AUTO tIDENTIFIER initializer ';'               { $$ = new mml::declaration_node(LINE, tPRIVATE, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3); }
+declaration     : tPUBLIC             tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, tPUBLIC, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3); delete $2;  }
+                | tPUBLIC  tTYPE_AUTO tIDENTIFIER initializer ';'      { $$ = new mml::declaration_node(LINE, tPUBLIC, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$3, $4); delete $3;  }
+                | tPUBLIC  data_type  tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, tPUBLIC, $2, *$3, $4); delete $3;                                                }
+                | tFORWARD data_type  tIDENTIFIER ';'                  { $$ = new mml::declaration_node(LINE, tFORWARD, $2, *$3, nullptr); delete $3;                                          }
+                | tFOREIGN data_type  tIDENTIFIER ';'                  { $$ = new mml::declaration_node(LINE, tFOREIGN, $2, *$3, nullptr); delete $3;                                          }
+                | data_type  tIDENTIFIER opt_initializer ';'           { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, $3); delete $2;                                               }
+                | tTYPE_AUTO tIDENTIFIER initializer ';'               { $$ = new mml::declaration_node(LINE, tPRIVATE, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3); delete $2; }
                 ;
 
 initializer     : '=' expression                                       { $$ = $2;                                                                                                   }
@@ -150,6 +150,8 @@ function_type   : data_type '<' data_types '>'                         {
                                                                          auto input = new std::vector<std::shared_ptr<cdk::basic_type>>();
                                                                          input->push_back($1);
                                                                          $$ = cdk::functional_type::create(*input, *$3);
+                                                                         delete input;
+                                                                         delete $3;
                                                                        }
                 ;
 
@@ -191,7 +193,7 @@ expressions     : expression                                           { $$ = ne
                 | expressions ',' expression                           { $$ = new cdk::sequence_node(LINE, $3, $1);                                                                 }
                 ;
 
-variable        : data_type tIDENTIFIER                                { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, nullptr);                                          }
+variable        : data_type tIDENTIFIER                                { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, nullptr); delete $2;                               }
                 ;
 
 variables       : /* empty */                                          { $$ = new cdk::sequence_node(LINE);                                                                         }
