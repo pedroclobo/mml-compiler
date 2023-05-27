@@ -12,9 +12,6 @@ void mml::postfix_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
 void mml::postfix_writer::do_data_node(cdk::data_node * const node, int lvl) {
   // EMPTY
 }
-void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  // EMPTY
-}
 void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->argument()->accept(this, lvl);
@@ -75,9 +72,29 @@ void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
     node->instructions()->accept(this, lvl);
   }
 }
+
 void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+
+  auto symbol = _symtab.find_local(node->identifier());
+
+  if (!symbol) {
+    throw new std::string(node->identifier() + " not found");
+  }
+
+  if (!node->initializer()) {
+    _pf.BSS();
+    _pf.ALIGN();
+    _pf.LABEL(node->identifier());
+    _pf.SALLOC(node->type()->size());
+  } else {
+    _pf.DATA();
+    _pf.ALIGN();
+    _pf.LABEL(node->identifier());
+    node->initializer()->accept(this, lvl);
+  }
 }
+
 void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
   // EMPTY
 }
@@ -85,6 +102,14 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
   // EMPTY
 }
 void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
+  _isGlobal = true;
+
+  if (node->declarations()) {
+    node->declarations()->accept(this, lvl);
+  }
+
+  _isGlobal = false;
+
   // generate the main function (RTS mandates that its name be "_main")
   _pf.TEXT();
   _pf.ALIGN();
@@ -92,9 +117,6 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   _pf.LABEL("_main");
   _pf.ENTER(0);  // MML doesn't implement local variables
 
-  if (node->declarations()) {
-    node->declarations()->accept(this, lvl);
-  }
   if (node->block()) {
     node->block()->accept(this, lvl);
   }
@@ -123,7 +145,19 @@ void mml::postfix_writer::do_sequence_node(cdk::sequence_node * const node, int 
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_integer_node(cdk::integer_node * const node, int lvl) {
-  _pf.INT(node->value()); // push an integer
+  if (_isGlobal) {
+    _pf.SINT(node->value());
+  } else {
+    _pf.INT(node->value());
+  }
+}
+
+void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
+  if (_isGlobal) {
+    _pf.SDOUBLE(node->value());
+  } else {
+    _pf.DOUBLE(node->value());
+  }
 }
 
 void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl) {
@@ -135,9 +169,13 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
   _pf.LABEL(mklbl(lbl1 = ++_lbl)); // give the string a name
   _pf.SSTRING(node->value()); // output string characters
 
-  /* leave the address on the stack */
-  _pf.TEXT(); // return to the TEXT segment
-  _pf.ADDR(mklbl(lbl1)); // the string to be printed
+  if (_isGlobal) {
+    _pf.DATA();
+    _pf.SADDR(mklbl(lbl1));
+  } else {
+    _pf.TEXT();
+    _pf.ADDR(mklbl(lbl1));
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -233,20 +271,11 @@ void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl)
 
 void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  node->rvalue()->accept(this, lvl); // determine the new value
+  node->rvalue()->accept(this, lvl);
   _pf.DUP32();
-  if (new_symbol() == nullptr) {
-    node->lvalue()->accept(this, lvl); // where to store the value
-  } else {
-    _pf.DATA(); // variables are all global and live in DATA
-    _pf.ALIGN(); // make sure we are aligned
-    _pf.LABEL(new_symbol()->name()); // name variable location
-    reset_new_symbol();
-    _pf.SINT(0); // initialize it to 0 (zero)
-    _pf.TEXT(); // return to the TEXT segment
-    node->lvalue()->accept(this, lvl);  //DAVID: bah!
-  }
-  _pf.STINT(); // store the value at address
+
+  node->lvalue()->accept(this, lvl);
+  _pf.STINT();
 }
 
 //---------------------------------------------------------------------------

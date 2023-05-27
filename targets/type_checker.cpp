@@ -21,45 +21,42 @@ void mml::type_checker::do_nil_node(cdk::nil_node *const node, int lvl) {
 void mml::type_checker::do_data_node(cdk::data_node *const node, int lvl) {
   // EMPTY
 }
-void mml::type_checker::do_double_node(cdk::double_node *const node, int lvl) {
-  // EMPTY
-}
 void mml::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
   ASSERT_UNSPEC;
+
   node->argument()->accept(this, lvl);
-  if (node->argument()->is_typed(cdk::TYPE_INT)) {
-    node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
-  } else if (node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
-    node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
-    node->argument()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
-  } else {
-    throw std::string("wrong type in unary logical expression");
+  if (!node->argument()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("not expressions only accept integers");
   }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_and_node(cdk::and_node *const node, int lvl) {
   ASSERT_UNSPEC;
-  node->left()->accept(this, lvl + 2);
+
+  node->left()->accept(this, lvl);
   if (!node->left()->is_typed(cdk::TYPE_INT)) {
-    throw std::string("integer expression expected in binary expression");
+    throw std::string("and expressions only accept integers");
   }
 
-  node->right()->accept(this, lvl + 2);
+  node->right()->accept(this, lvl);
   if (!node->right()->is_typed(cdk::TYPE_INT)) {
-    throw std::string("integer expression expected in binary expression");
+    throw std::string("and expressions only accept integers");
   }
 
   node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
   ASSERT_UNSPEC;
-  node->left()->accept(this, lvl + 2);
+
+  node->left()->accept(this, lvl);
   if (!node->left()->is_typed(cdk::TYPE_INT)) {
-    throw std::string("integer expression expected in binary expression");
+    throw std::string("or expressions only accept integers");
   }
 
-  node->right()->accept(this, lvl + 2);
+  node->right()->accept(this, lvl);
   if (!node->right()->is_typed(cdk::TYPE_INT)) {
-    throw std::string("integer expression expected in binary expression");
+    throw std::string("or expressions only accept integers");
   }
 
   node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
@@ -91,9 +88,39 @@ void mml::type_checker::do_stack_alloc_node(mml::stack_alloc_node * const node, 
 void mml::type_checker::do_block_node(mml::block_node * const node, int lvl) {
   // EMPTY
 }
+
 void mml::type_checker::do_declaration_node(mml::declaration_node * const node, int lvl) {
-  // EMPTY
+  if (node->initializer()) {
+    node->initializer()->accept(this, lvl);
+
+    if (node->is_typed(cdk::TYPE_INT)) {
+      if (!node->initializer()->is_typed(cdk::TYPE_INT)) {
+        throw std::string("wrong type for initializer: expected integer");
+      }
+    } else if (node->is_typed(cdk::TYPE_DOUBLE)) {
+      if (!node->initializer()->is_typed(cdk::TYPE_INT) && !node->initializer()->is_typed(cdk::TYPE_DOUBLE)) {
+        throw std::string("wrong type for initializer: expected integer or double");
+      }
+    } else if (node->is_typed(cdk::TYPE_STRING)) {
+      if (!node->initializer()->is_typed(cdk::TYPE_STRING)) {
+        throw std::string("wrong type for initializer: expected string");
+      }
+    }
+    // FIXME: handle other types
+
+    if (node->is_typed(cdk::TYPE_UNSPEC)) {
+      node->type(node->initializer()->type());
+    }
+  }
+
+  auto symbol = std::make_shared<mml::symbol>(node->type(), node->identifier(), 0);
+  if (!_symtab.insert(node->identifier(), symbol)){
+    throw std::string(node->identifier() + " redeclared");
+  }
+
+  _parent->set_new_symbol(symbol);
 }
+
 void mml::type_checker::do_function_call_node(mml::function_call_node * const node, int lvl) {
   // EMPTY
 }
@@ -101,7 +128,8 @@ void mml::type_checker::do_function_definition_node(mml::function_definition_nod
   // EMPTY
 }
 void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) {
-  // EMPTY
+  node->declarations()->accept(this, lvl);
+  node->block()->accept(this, lvl);
 }
 
 //---------------------------------------------------------------------------
@@ -114,6 +142,11 @@ void mml::type_checker::do_integer_node(cdk::integer_node *const node, int lvl) 
 void mml::type_checker::do_string_node(cdk::string_node *const node, int lvl) {
   ASSERT_UNSPEC;
   node->type(cdk::primitive_type::create(4, cdk::TYPE_STRING));
+}
+
+void mml::type_checker::do_double_node(cdk::double_node *const node, int lvl) {
+  ASSERT_UNSPEC;
+  node->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
 }
 
 //---------------------------------------------------------------------------
@@ -181,15 +214,12 @@ void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_variable_node(cdk::variable_node *const node, int lvl) {
-  ASSERT_UNSPEC;
-  const std::string &id = node->name();
-  std::shared_ptr<mml::symbol> symbol = _symtab.find(id);
-
-  if (symbol != nullptr) {
-    node->type(symbol->type());
-  } else {
-    throw id;
+  const std::string &identifier = node->name();
+  auto symbol = _symtab.find(identifier);
+  if (!symbol) {
+    throw identifier;
   }
+  node->type(symbol->type());
 }
 
 void mml::type_checker::do_rvalue_node(cdk::rvalue_node *const node, int lvl) {

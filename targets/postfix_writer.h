@@ -16,6 +16,8 @@ namespace mml {
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
 
+    bool _isGlobal = true;
+
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,
                    cdk::basic_postfix_emitter &pf) :
