@@ -12,7 +12,7 @@ namespace mml {
     mml::block_node *_block;
 
   public:
-    function_definition_node(int lineno, cdk::sequence_node *arguments, std::shared_ptr<cdk::basic_type> funType, mml::block_node *block) :
+    inline function_definition_node(int lineno, cdk::sequence_node *arguments, std::shared_ptr<cdk::basic_type> funType, mml::block_node *block) :
         cdk::expression_node(lineno), _arguments(arguments), _block(block) {
       type(funType);
     }
