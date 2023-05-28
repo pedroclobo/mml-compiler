@@ -149,7 +149,7 @@ data_types      : /* empty */                                          { $$ = ne
 function_type   : data_type '<' data_types '>'                         {
                                                                          auto input = new std::vector<std::shared_ptr<cdk::basic_type>>();
                                                                          input->push_back($1);
-                                                                         $$ = cdk::functional_type::create(*input, *$3);
+                                                                         $$ = cdk::functional_type::create(*$3, *input);
                                                                          delete input;
                                                                          delete $3;
                                                                        }
