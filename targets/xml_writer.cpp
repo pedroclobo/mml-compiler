@@ -21,9 +21,13 @@ static std::string ttos(std::shared_ptr<cdk::basic_type> type) {
   std::string type_string = type->to_string();
   size_t start_pos = 0;
 
-  while ((start_pos = type_string.find("<", start_pos)) != std::string::npos) {
+  while ((start_pos = type_string.find_first_of("<>", start_pos)) != std::string::npos) {
+    if (type_string[start_pos] == '<') {
       type_string.replace(start_pos, 1, "&lt;");
-      start_pos += 4;
+    } else {
+      type_string.replace(start_pos, 1, "&gt;");
+    }
+    start_pos += 4;
   }
 
   return type_string;
