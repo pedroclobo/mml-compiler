@@ -85,6 +85,7 @@ file            : declarations                                         { compile
 block           : declarations instructions                            { $$ = new mml::block_node(LINE, $1, $2);                                                                               }
                 | declarations                                         { $$ = new mml::block_node(LINE, $1, new cdk::sequence_node(LINE));                                                     }
                 | instructions                                         { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), $1);                                                     }
+                | /* empty */                                          { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), new cdk::sequence_node(LINE));                           }
                 ;
 
 declaration     : tPUBLIC             tIDENTIFIER opt_initializer ';'  { $$ = new mml::declaration_node(LINE, tPUBLIC, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $3); delete $2;  }
