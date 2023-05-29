@@ -61,7 +61,8 @@ void mml::xml_writer::do_integer_node(cdk::integer_node * const node, int lvl) {
 }
 
 void mml::xml_writer::do_string_node(cdk::string_node * const node, int lvl) {
-  process_literal(node, lvl);
+  os() << std::string(lvl, ' ') << "<" << node->label() << ">"
+       << "<![CDATA[" << node->value() << "]]>" << "</" << node->label() << ">" << std::endl;
 }
 
 void mml::xml_writer::do_double_node(cdk::double_node * const node, int lvl) {
