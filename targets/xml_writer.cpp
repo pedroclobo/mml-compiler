@@ -259,6 +259,7 @@ void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
 }
 
 void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
   os() << std::string(lvl, ' ') << "<" << node->label()
        << " qualifier='" << qtos(node->qualifier())
        << "' type='" << ttos(node->type())
