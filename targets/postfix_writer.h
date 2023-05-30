@@ -17,6 +17,7 @@ namespace mml {
     int _lbl;
 
     bool _isGlobal = true;
+    int _offset = 0; // FP offset
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,

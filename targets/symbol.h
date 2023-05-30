@@ -4,17 +4,21 @@
 #include <string>
 #include <memory>
 #include <cdk/types/basic_type.h>
+// #include "mml_parser.tab.h"
 
 namespace mml {
 
   class symbol {
     std::shared_ptr<cdk::basic_type> _type;
-    std::string _name;
-    long _value; // hack!
+    std::string _identifier;
+    int _qualifier;
+    int _offset;
+    bool _function;
+    bool _global;
 
   public:
-    symbol(std::shared_ptr<cdk::basic_type> type, const std::string &name, long value) :
-        _type(type), _name(name), _value(value) {
+    symbol(std::shared_ptr<cdk::basic_type> type, const std::string &identifier, int qualifier, bool function, bool global) :
+        _type(type), _identifier(identifier), _qualifier(qualifier), _offset(0), _function(function), _global(global) {
     }
 
     virtual ~symbol() {
@@ -27,14 +31,26 @@ namespace mml {
     bool is_typed(cdk::typename_type name) const {
       return _type->name() == name;
     }
-    const std::string &name() const {
-      return _name;
+    const std::string &identifier() const {
+      return _identifier;
     }
-    long value() const {
-      return _value;
+    int qualifier() const {
+      return _qualifier;
     }
-    long value(long v) {
-      return _value = v;
+    void offset(int offset) {
+      _offset = offset;
+    }
+    int offset() const {
+      return _offset;
+    }
+    bool function() const {
+      return _function;
+    }
+    bool global() const {
+	  return _global;
+    }
+    void global(bool global) {
+      _global = global;
     }
   };
 

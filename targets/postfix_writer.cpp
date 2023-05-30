@@ -2,6 +2,7 @@
 #include <sstream>
 #include "targets/type_checker.h"
 #include "targets/postfix_writer.h"
+#include "targets/frame_size_calculator.h"
 #include ".auto/all_nodes.h"  // all_nodes.h is automatically generated
 
 //---------------------------------------------------------------------------
@@ -76,22 +77,44 @@ void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
 void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  auto symbol = _symtab.find_local(node->identifier());
+  // auto symbol = _symtab.find_local(node->identifier());
+  //
+  // if (!symbol) {
+  //   throw new std::string(node->identifier() + " not found");
+  // }
 
-  if (!symbol) {
-    throw new std::string(node->identifier() + " not found");
+  int offset = 0;
+  if (!_isGlobal) {
+    _offset -= node->type()->size();
+    offset = _offset;
   }
 
-  if (!node->initializer()) {
-    _pf.BSS();
-    _pf.ALIGN();
-    _pf.LABEL(node->identifier());
-    _pf.SALLOC(node->type()->size());
+  auto symbol = new_symbol();
+  if (symbol) {
+	symbol->offset(offset);
+    reset_new_symbol();
+  }
+
+  if (!_isGlobal) {
+	symbol->global(false);
+    if (node->initializer()) {
+      node->initializer()->accept(this, lvl);
+      _pf.LOCAL(-4);
+      _pf.STINT();
+    }
   } else {
-    _pf.DATA();
-    _pf.ALIGN();
-    _pf.LABEL(node->identifier());
-    node->initializer()->accept(this, lvl);
+	symbol->global(true);
+    if (!node->initializer()) {
+      _pf.BSS();
+      _pf.ALIGN();
+      _pf.LABEL(node->identifier());
+      _pf.SALLOC(node->type()->size());
+    } else {
+      _pf.DATA();
+      _pf.ALIGN();
+      _pf.LABEL(node->identifier());
+      node->initializer()->accept(this, lvl);
+    }
   }
 }
 
@@ -110,12 +133,16 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
 
   _isGlobal = false;
 
+  // calculate stack size for main function
+  frame_size_calculator frame_calc(_compiler, _symtab);
+  node->accept(&frame_calc, lvl);
+
   // generate the main function (RTS mandates that its name be "_main")
   _pf.TEXT();
   _pf.ALIGN();
   _pf.GLOBAL("_main", _pf.FUNC());
   _pf.LABEL("_main");
-  _pf.ENTER(0);  // MML doesn't implement local variables
+  _pf.ENTER(frame_calc.size());
 
   if (node->block()) {
     node->block()->accept(this, lvl);
@@ -259,8 +286,14 @@ void mml::postfix_writer::do_eq_node(cdk::eq_node * const node, int lvl) {
 
 void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // simplified generation: all variables are global
-  _pf.ADDR(node->name());
+  auto symbol = _symtab.find(node->name());
+
+  std::cout << symbol->global() << " " << symbol->identifier() << std::endl;
+  if (symbol->global()) {
+    _pf.ADDR(symbol->identifier());
+  } else {
+    _pf.LOCAL(symbol->offset());
+  }
 }
 
 void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
