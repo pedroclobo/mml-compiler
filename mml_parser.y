@@ -68,7 +68,7 @@
 %type <expression> expression initializer opt_initializer
 %type <block> block
 %type <lvalue> lvalue
-%type <type> data_type function_type
+%type <type> data_type
 %type <types> data_types
 %type <s> string
 
@@ -136,24 +136,18 @@ data_type       : tTYPE_INT                                            { $$ = cd
                 | tTYPE_STRING                                         { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING);                                                                }
                 | tTYPE_VOID                                           { $$ = cdk::primitive_type::create(0, cdk::TYPE_VOID);                                                                  }
                 | '[' data_type ']'                                    { $$ = cdk::reference_type::create(4, $2);                                                                              }
-                | function_type                                        { $$ = $1;                                                                                                              }
-                ;
-
-data_types      : /* empty */                                          { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>();                                                             }
-                | data_type                                            {
-                                                                         $$ = new std::vector<std::shared_ptr<cdk::basic_type>>();
-                                                                         $$->push_back($1);
-                                                                       }
-                | data_types ',' data_type                             { $$ = $1; $$->push_back($3);                                                                                           }
-                ;
-
-function_type   : data_type '<' data_types '>'                         {
+                | data_type '<' data_types '>'                         {
                                                                          auto output = new std::vector<std::shared_ptr<cdk::basic_type>>();
                                                                          output->push_back($1);
                                                                          $$ = cdk::functional_type::create(*$3, *output);
-                                                                         delete output;
                                                                          delete $3;
+                                                                         delete output;
                                                                        }
+                ;
+
+data_types      : /* empty */                                          { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>();                                                             }
+                | data_type                                            { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>(); $$->push_back($1);                                          }
+                | data_types ',' data_type                             { $$ = $1; $$->push_back($3);                                                                                           }
                 ;
 
 expression      : tINTEGER                                             { $$ = new cdk::integer_node(LINE, $1);                                                                                 }
