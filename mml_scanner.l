@@ -11,7 +11,7 @@
 // don't change this
 #define yyerror LexerError
 %}
-%x X_STRING X_COMMENT X_ESCAPE X_IGNORE
+%x X_STRING X_COMMENT X_ESCAPE
 
 DIGIT                  [0-9]
 INT                    0|[1-9]{DIGIT}*
@@ -78,13 +78,7 @@ EXPONENT               [eE][-+]?{DIGIT}+
 <X_ESCAPE>t              *yylval.s += '\t'; yy_pop_state();
 <X_ESCAPE>n              *yylval.s += '\n'; yy_pop_state();
 <X_ESCAPE>r              *yylval.s += '\r'; yy_pop_state();
-<X_ESCAPE>0              yy_push_state(X_IGNORE);
 <X_ESCAPE>[0-7]{1,3}     *yylval.s += (char)strtoul(yytext, NULL, 8); yy_pop_state();
-
-<X_IGNORE>\"             yy_pop_state(); yy_pop_state(); yy_pop_state(); return tSTRING; /* string end */
-<X_IGNORE>\0             yyerror("Null terminator in string");
-<X_IGNORE>\n             yyerror("Newline in string");
-<X_IGNORE>.
 
 0[0-7]+                  yylval.i = strtoul(yytext, NULL, 8); if (errno == ERANGE) yyerror("Overflow"); return tINTEGER;
 
