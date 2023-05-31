@@ -388,6 +388,7 @@ void mml::postfix_writer::do_if_node(mml::if_node * const node, int lvl) {
   node->condition()->accept(this, lvl);
   _pf.JZ(mklbl(lbl1 = ++_lbl));
   node->block()->accept(this, lvl + 2);
+  _pf.ALIGN();
   _pf.LABEL(mklbl(lbl1));
 }
 
@@ -400,7 +401,9 @@ void mml::postfix_writer::do_if_else_node(mml::if_else_node * const node, int lv
   _pf.JZ(mklbl(lbl1 = ++_lbl));
   node->thenblock()->accept(this, lvl + 2);
   _pf.JMP(mklbl(lbl2 = ++_lbl));
+  _pf.ALIGN();
   _pf.LABEL(mklbl(lbl1));
   node->elseblock()->accept(this, lvl + 2);
+  _pf.ALIGN();
   _pf.LABEL(mklbl(lbl1 = lbl2));
 }
