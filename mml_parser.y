@@ -134,7 +134,7 @@ instructions    : /* empty */  instruction                             { $$ = ne
 data_type       : tTYPE_INT                                            { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT);                                                                   }
                 | tTYPE_DOUBLE                                         { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE);                                                                }
                 | tTYPE_STRING                                         { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING);                                                                }
-                | tTYPE_VOID                                           { $$ = cdk::primitive_type::create(0, cdk::TYPE_VOID);                                                                  }
+                | tTYPE_VOID                                           { $$ = cdk::primitive_type::create(4, cdk::TYPE_VOID);                                                                  }
                 | '[' data_type ']'                                    { $$ = cdk::reference_type::create(4, $2);                                                                              }
                 | data_type '<' data_types '>'                         {
                                                                          auto output = new std::vector<std::shared_ptr<cdk::basic_type>>();
