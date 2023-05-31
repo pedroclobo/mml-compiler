@@ -48,12 +48,12 @@ void mml::postfix_writer::do_null_node(mml::null_node * const node, int lvl) {
   // EMPTY
 }
 void mml::postfix_writer::do_stop_node(mml::stop_node * const node, int lvl) {
-  if (node->level() <= _whileEnd.size()) {
+  if (node->level() <= (int)_whileEnd.size()) {
     _pf.JMP(mklbl(_whileEnd[_whileEnd.size() - node->level()]));
   }
 }
 void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
-  if (node->level() <= _whileCond.size()) {
+  if (node->level() <= (int)_whileCond.size()) {
     _pf.JMP(mklbl(_whileCond[_whileCond.size() - node->level()]));
   }
 }
