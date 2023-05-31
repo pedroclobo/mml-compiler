@@ -4,6 +4,7 @@
 #include "targets/basic_ast_visitor.h"
 
 #include <sstream>
+#include <vector>
 #include <cdk/emitters/basic_postfix_emitter.h>
 
 namespace mml {
@@ -18,6 +19,7 @@ namespace mml {
 
     bool _isGlobal = true;
     int _offset = 0; // FP offset
+    std::vector<int> _whileCond, _whileEnd;
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,

@@ -48,10 +48,14 @@ void mml::postfix_writer::do_null_node(mml::null_node * const node, int lvl) {
   // EMPTY
 }
 void mml::postfix_writer::do_stop_node(mml::stop_node * const node, int lvl) {
-  // EMPTY
+  if (node->level() <= _whileEnd.size()) {
+    _pf.JMP(mklbl(_whileEnd[_whileEnd.size() - node->level()]));
+  }
 }
 void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
-  // EMPTY
+  if (node->level() <= _whileCond.size()) {
+    _pf.JMP(mklbl(_whileCond[_whileCond.size() - node->level()]));
+  }
 }
 void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl) {
   // EMPTY
@@ -371,13 +375,25 @@ void mml::postfix_writer::do_read_node(mml::read_node * const node, int lvl) {
 
 void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  int lbl1, lbl2;
-  _pf.LABEL(mklbl(lbl1 = ++_lbl));
+  _symtab.push();
+
+  int condition, end;
+  _whileCond.push_back(condition = ++_lbl);
+  _whileEnd.push_back(end = ++_lbl);
+
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(condition));
   node->condition()->accept(this, lvl);
-  _pf.JZ(mklbl(lbl2 = ++_lbl));
-  node->block()->accept(this, lvl + 2);
-  _pf.JMP(mklbl(lbl1));
-  _pf.LABEL(mklbl(lbl2));
+  _pf.JZ(mklbl(end));
+  node->block()->accept(this, lvl);
+  _pf.JMP(mklbl(condition));
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(end));
+
+  _whileCond.pop_back();
+  _whileEnd.pop_back();
+
+  _symtab.pop();
 }
 
 //---------------------------------------------------------------------------
