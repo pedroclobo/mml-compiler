@@ -100,8 +100,16 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 	symbol->global(false);
     if (node->initializer()) {
       node->initializer()->accept(this, lvl);
-      _pf.LOCAL(-4);
-      _pf.STINT();
+      if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_STRING)) {
+        _pf.LOCAL(symbol->offset());
+        _pf.STINT();
+      } else if (node->is_typed(cdk::TYPE_DOUBLE)) {
+        if (node->initializer()->is_typed(cdk::TYPE_INT)) {
+          _pf.I2D();
+        }
+        _pf.LOCAL(symbol->offset());
+        _pf.STDOUBLE();
+      }
     }
   } else {
 	symbol->global(true);
@@ -289,7 +297,6 @@ void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int 
   ASSERT_SAFE_EXPRESSIONS;
   auto symbol = _symtab.find(node->name());
 
-  std::cout << symbol->global() << " " << symbol->identifier() << std::endl;
   if (symbol->global()) {
     _pf.ADDR(symbol->identifier());
   } else {
