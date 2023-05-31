@@ -158,7 +158,10 @@ void mml::frame_size_calculator::do_block_node(mml::block_node * const node, int
 }
 
 void mml::frame_size_calculator::do_declaration_node(mml::declaration_node * const node, int lvl) {
+  _symtab.push();
   ASSERT_SAFE_EXPRESSIONS;
+  _symtab.pop();
+
   _size += node->type()->size();
 }
 
