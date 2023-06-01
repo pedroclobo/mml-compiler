@@ -62,7 +62,9 @@ void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
   node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_address_of_node(mml::address_of_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_UNSPEC;
+  node->lvalue()->accept(this, lvl);
+  node->type(cdk::reference_type::create(4, node->lvalue()->type()));
 }
 void mml::type_checker::do_null_node(mml::null_node * const node, int lvl) {
   ASSERT_UNSPEC;
@@ -78,7 +80,22 @@ void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
   // TODO
 }
 void mml::type_checker::do_index_node(mml::index_node * const node, int lvl) {
-  // TODO
+  // TODO: functions can't be indexed
+  ASSERT_UNSPEC;
+
+  node->base()->accept(this, lvl + 2);
+  node->index()->accept(this, lvl + 2);
+
+  if (!node->base()->is_typed(cdk::TYPE_POINTER)) {
+    throw std::string("only pointers can be indexed");
+  }
+
+  if (!node->index()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("index must be a integer");
+  }
+
+  auto ref_type = std::dynamic_pointer_cast<cdk::reference_type>(node->base()->type());
+  node->type(ref_type->referenced());
 }
 void mml::type_checker::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
   ASSERT_UNSPEC;
@@ -93,10 +110,16 @@ void mml::type_checker::do_stack_alloc_node(mml::stack_alloc_node * const node, 
   }
 
   // TODO: is this right?
-  node->type(cdk::reference_type::create(4, cdk::primitive_type::create(8, cdk::TYPE_UNSPEC)));
+  node->type(cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC)));
 }
 void mml::type_checker::do_block_node(mml::block_node * const node, int lvl) {
-  // EMPTY
+  _symtab.push();
+
+  // TODO: probably needed to calculate frame size
+  node->declarations()->accept(this, lvl);
+  node->instructions()->accept(this, lvl);
+
+  _symtab.pop();
 }
 
 void mml::type_checker::do_declaration_node(mml::declaration_node * const node, int lvl) {
@@ -134,6 +157,10 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
 }
 
 void mml::type_checker::do_function_call_node(mml::function_call_node * const node, int lvl) {
+  ASSERT_UNSPEC;
+
+  node->function()->accept(this, lvl);
+  node->type(node->function()->type());
   // TODO
 }
 void mml::type_checker::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
@@ -141,7 +168,10 @@ void mml::type_checker::do_function_definition_node(mml::function_definition_nod
 }
 void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) {
   node->declarations()->accept(this, lvl);
+
+  _symtab.push();
   node->block()->accept(this, lvl);
+  _symtab.pop();
 }
 
 //---------------------------------------------------------------------------
@@ -168,7 +198,7 @@ void mml::type_checker::do_neg_node(cdk::neg_node *const node, int lvl) {
 
   node->argument()->accept(this, lvl);
   if (!node->argument()->is_typed(cdk::TYPE_INT) && !node->argument()->is_typed(cdk::TYPE_DOUBLE)) {
-    throw std::string("not expressions only accept integers or doubles");
+    throw std::string("neg expressions only accept integers or doubles");
   }
 
   if (node->argument()->is_typed(cdk::TYPE_INT)) {
@@ -193,10 +223,76 @@ void mml::type_checker::processBinaryExpression(cdk::binary_operation_node *cons
 }
 
 void mml::type_checker::do_add_node(cdk::add_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl); 
+  node->right()->accept(this, lvl); 
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else if (node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      node->type(node->right()->type());
+    } else if (node->right()->is_typed(cdk::TYPE_POINTER)) {
+      node->type(node->right()->type());
+    } else {
+      throw std::string("invalid right operand to add to integer");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (node->right()->is_typed(cdk::TYPE_DOUBLE) || node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else {
+      throw std::string("invalid right operand to add to double");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_POINTER)) {
+    if (node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else {
+      throw std::string("invalid right operand to add to pointer");
+    }
+  } else {
+    throw std::string("incompatible arguments in add operation");
+  }
 }
 void mml::type_checker::do_sub_node(cdk::sub_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl); 
+  node->right()->accept(this, lvl); 
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else if (node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      node->type(node->right()->type());
+    } else if (node->right()->is_typed(cdk::TYPE_POINTER)) {
+      node->type(node->right()->type());
+    } else {
+      throw std::string("invalid right operand to add to integer");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (node->right()->is_typed(cdk::TYPE_DOUBLE) || node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else {
+      throw std::string("invalid right operand to add to double");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_POINTER)) {
+    if (node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else if (node->right()->is_typed(cdk::TYPE_POINTER)) {
+      auto left_ref = cdk::reference_type::cast(node->left()->type());
+      auto right_ref = cdk::reference_type::cast(node->right()->type());
+
+      if (left_ref->referenced() != right_ref->referenced()) {
+        throw std::string("pointers must have the same type in sub operations");
+      }
+      node->type(node->left()->type());
+    } else {
+      throw std::string("invalid right operand to add to pointer");
+    }
+  } else {
+    throw std::string("incompatible arguments in add operation");
+  }
 }
 void mml::type_checker::do_mul_node(cdk::mul_node *const node, int lvl) {
   processBinaryExpression(node, lvl);
@@ -229,6 +325,7 @@ void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_variable_node(cdk::variable_node *const node, int lvl) {
+  ASSERT_UNSPEC;
   const std::string &identifier = node->name();
   auto symbol = _symtab.find(identifier);
   if (!symbol) {
@@ -276,7 +373,7 @@ void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int
 }
 
 void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
-  node->arguments()->accept(this, lvl + 2);
+  node->arguments()->accept(this, lvl);
 }
 
 //---------------------------------------------------------------------------
