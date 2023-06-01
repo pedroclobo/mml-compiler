@@ -173,6 +173,7 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   _pf.EXTERN("readi");
   _pf.EXTERN("printi");
   _pf.EXTERN("prints");
+  _pf.EXTERN("printd");
   _pf.EXTERN("println");
 }
 
@@ -349,10 +350,13 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
 
     if (child->is_typed(cdk::TYPE_INT)) {
       _pf.CALL("printi");
-      _pf.TRASH(4); // delete the printed value
+      _pf.TRASH(4);
     } else if (child->is_typed(cdk::TYPE_STRING)) {
       _pf.CALL("prints");
-      _pf.TRASH(4); // delete the printed value's address
+      _pf.TRASH(4);
+    } else if (child->is_typed(cdk::TYPE_DOUBLE)) {
+      _pf.CALL("printd");
+      _pf.TRASH(8);
     } else {
       std::cerr << "ERROR: CANNOT PRINT EXPRESSION OF UNKNOWN TYPE" << std::endl;
       exit(1);
