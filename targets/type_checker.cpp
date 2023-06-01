@@ -210,23 +210,11 @@ void mml::type_checker::do_neg_node(cdk::neg_node *const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
-void mml::type_checker::processBinaryExpression(cdk::binary_operation_node *const node, int lvl) {
-  ASSERT_UNSPEC;
-  node->left()->accept(this, lvl + 2);
-  if (!node->left()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in left argument of binary expression");
-
-  node->right()->accept(this, lvl + 2);
-  if (!node->right()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in right argument of binary expression");
-
-  // in MML, expressions are always int
-  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
-}
-
 void mml::type_checker::do_add_node(cdk::add_node *const node, int lvl) {
   ASSERT_UNSPEC;
 
-  node->left()->accept(this, lvl); 
-  node->right()->accept(this, lvl); 
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
 
   if (node->left()->is_typed(cdk::TYPE_INT)) {
     if (node->right()->is_typed(cdk::TYPE_INT)) {
@@ -257,8 +245,8 @@ void mml::type_checker::do_add_node(cdk::add_node *const node, int lvl) {
 void mml::type_checker::do_sub_node(cdk::sub_node *const node, int lvl) {
   ASSERT_UNSPEC;
 
-  node->left()->accept(this, lvl); 
-  node->right()->accept(this, lvl); 
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
 
   if (node->left()->is_typed(cdk::TYPE_INT)) {
     if (node->right()->is_typed(cdk::TYPE_INT)) {
@@ -295,31 +283,180 @@ void mml::type_checker::do_sub_node(cdk::sub_node *const node, int lvl) {
   }
 }
 void mml::type_checker::do_mul_node(cdk::mul_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else if (node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      node->type(node->right()->type());
+    } else {
+      throw std::string("invalid right operand to mul with integer");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (node->right()->is_typed(cdk::TYPE_DOUBLE) || node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else {
+      throw std::string("invalid right operand to mul with double");
+    }
+  } else {
+    throw std::string("incompatible arguments in mul operation");
+  }
 }
 void mml::type_checker::do_div_node(cdk::div_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else if (node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      node->type(node->right()->type());
+    } else {
+      throw std::string("invalid right operand to div integer");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (node->right()->is_typed(cdk::TYPE_DOUBLE) || node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else {
+      throw std::string("invalid right operand to div double");
+    }
+  } else {
+    throw std::string("incompatible arguments in div operation");
+  }
 }
 void mml::type_checker::do_mod_node(cdk::mod_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
+
+  if (!node->left()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("mod expressions only accept integers");
+  }
+
+  node->type(node->left()->type());
 }
 void mml::type_checker::do_lt_node(cdk::lt_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (!node->right()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      throw std::string("invalid right operand to lt operation");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT)) {
+      throw std::string("invalid right operand to lt operation");
+    }
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_le_node(cdk::le_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (!node->right()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      throw std::string("invalid right operand to le operation");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT)) {
+      throw std::string("invalid right operand to le operation");
+    }
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_ge_node(cdk::ge_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (!node->right()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      throw std::string("invalid right operand to ge operation");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT)) {
+      throw std::string("invalid right operand to ge operation");
+    }
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_gt_node(cdk::gt_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (!node->right()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      throw std::string("invalid right operand to gt operation");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT)) {
+      throw std::string("invalid right operand to gt operation");
+    }
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_ne_node(cdk::ne_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (!node->right()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      throw std::string("invalid right operand in ne operation to compare to double");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT)) {
+      throw std::string("invalid right operand in ne operation to compare to double");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_POINTER)) {
+    if (!node->right()->is_typed(cdk::TYPE_POINTER)) {
+      throw std::string("invalid right operand in ne operation to compare to pointer");
+    }
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl);
+  node->right()->accept(this, lvl);
+
+  if (node->left()->is_typed(cdk::TYPE_INT)) {
+    if (!node->right()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      throw std::string("invalid right operand in eq operation to compare to double");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT)) {
+      throw std::string("invalid right operand in eq operation to compare to double");
+    }
+  } else if (node->left()->is_typed(cdk::TYPE_POINTER)) {
+    if (!node->right()->is_typed(cdk::TYPE_POINTER)) {
+      throw std::string("invalid right operand in eq operation to compare to pointer");
+    }
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 
 //---------------------------------------------------------------------------
