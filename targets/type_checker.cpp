@@ -478,7 +478,8 @@ void mml::type_checker::do_read_node(mml::read_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_while_node(mml::while_node *const node, int lvl) {
-  node->condition()->accept(this, lvl + 4);
+  node->condition()->accept(this, lvl);
+  node->block()->accept(this, lvl);
 }
 
 void mml::type_checker::do_stop_node(mml::stop_node * const node, int lvl) {
