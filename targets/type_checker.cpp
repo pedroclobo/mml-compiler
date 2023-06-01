@@ -391,44 +391,62 @@ void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
 
 void mml::type_checker::do_variable_node(cdk::variable_node *const node, int lvl) {
   ASSERT_UNSPEC;
-  const std::string &identifier = node->name();
-  auto symbol = _symtab.find(identifier);
+
+  auto symbol = _symtab.find(node->name());
   if (!symbol) {
-    throw identifier;
+    throw "undeclared variable '" + node->name() + "'";
   }
+
   node->type(symbol->type());
 }
 
 void mml::type_checker::do_rvalue_node(cdk::rvalue_node *const node, int lvl) {
   ASSERT_UNSPEC;
-  try {
-    node->lvalue()->accept(this, lvl);
-    node->type(node->lvalue()->type());
-  } catch (const std::string &id) {
-    throw "undeclared variable '" + id + "'";
-  }
+
+  node->lvalue()->accept(this, lvl);
+  node->type(node->lvalue()->type());
 }
 
 void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int lvl) {
   ASSERT_UNSPEC;
 
-  try {
-    node->lvalue()->accept(this, lvl);
-  } catch (const std::string &id) {
-    // FIXME
-    auto symbol = std::make_shared<mml::symbol>(cdk::primitive_type::create(4, cdk::TYPE_INT), id, 0, false, false);
-    _symtab.insert(id, symbol);
-    _parent->set_new_symbol(symbol);  // advise parent that a symbol has been inserted
-    node->lvalue()->accept(this, lvl);  //DAVID: bah!
+  node->lvalue()->accept(this, lvl);
+  node->rvalue()->accept(this, lvl);
+
+  if (node->lvalue()->is_typed(cdk::TYPE_INT)) {
+    if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->lvalue()->type());
+    } else if (node->rvalue()->is_typed(cdk::TYPE_DOUBLE)) {
+      node->type(node->rvalue()->type());
+    } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER)) {
+      node->type(node->rvalue()->type());
+    } else {
+      throw std::string("invalid rvalue operand to assign to integer lvalue");
+    }
+  } else if (node->lvalue()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (node->rvalue()->is_typed(cdk::TYPE_DOUBLE) || node->rvalue()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->lvalue()->type());
+    } else {
+      throw std::string("invalid rvalue operand to assign to double lvalue");
+    }
+  } else if (node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
+    if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->lvalue()->type());
+    } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER)) {
+      auto lvalue_ref = cdk::reference_type::cast(node->lvalue()->type());
+      auto rvalue_ref = cdk::reference_type::cast(node->rvalue()->type());
+
+      // TOOO: nullptr
+      if (lvalue_ref->referenced() != rvalue_ref->referenced()) {
+        throw std::string("assignment of imcompatible pointers");
+      }
+      node->type(node->lvalue()->type());
+    } else {
+      throw std::string("invalid rvalue operand to assign to pointer lvalue");
+    }
+  } else {
+    throw std::string("incompatible arguments in assignment operation");
   }
-
-  if (!node->lvalue()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in left argument of assignment expression");
-
-  node->rvalue()->accept(this, lvl + 2);
-  if (!node->rvalue()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in right argument of assignment expression");
-
-  // in MML, expressions are always int
-  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 
 //---------------------------------------------------------------------------
