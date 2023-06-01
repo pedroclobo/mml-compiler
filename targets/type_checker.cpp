@@ -430,7 +430,7 @@ void mml::type_checker::do_ne_node(cdk::ne_node *const node, int lvl) {
 
   if (node->left()->is_typed(cdk::TYPE_INT)) {
     if (!node->right()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
-      throw std::string("invalid right operand in ne operation to compare to double");
+      throw std::string("invalid right operand in ne operation to compare to integer");
     }
   } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
     if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT)) {
@@ -454,7 +454,7 @@ void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
 
   if (node->left()->is_typed(cdk::TYPE_INT)) {
     if (!node->right()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
-      throw std::string("invalid right operand in eq operation to compare to double");
+      throw std::string("invalid right operand in eq operation to compare to integer");
     }
   } else if (node->left()->is_typed(cdk::TYPE_DOUBLE)) {
     if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT)) {
