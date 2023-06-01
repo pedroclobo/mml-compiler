@@ -470,7 +470,7 @@ void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
 void mml::type_checker::do_read_node(mml::read_node *const node, int lvl) {
   ASSERT_UNSPEC;
 
-  // read nodes can be have type integer or double
+  // read nodes can have type integer or double
   // if a double is needed, the work will be done by the other nodes
   node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
