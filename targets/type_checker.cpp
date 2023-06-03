@@ -452,7 +452,7 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int lvl) {
-  node->argument()->accept(this, lvl + 2);
+  node->argument()->accept(this, lvl);
 }
 
 void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
@@ -534,9 +534,7 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
     }
     // FIXME: handle other types
 
-    if (node->is_typed(cdk::TYPE_UNSPEC)) {
-      node->type(node->initializer()->type());
-    }
+    node->type(node->initializer()->type());
   }
 
   // FIXME: handle other types (function not supported)
@@ -563,15 +561,29 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
   ASSERT_UNSPEC;
 
   node->function()->accept(this, lvl);
-  node->type(node->function()->type());
+  auto func_type = cdk::functional_type::cast(node->function()->type());
+  node->type(func_type->output(0));
   // TODO
 }
 
 void mml::type_checker::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
-  // TODO
+  if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
+    return;    
+  }
+
+  std::vector<std::shared_ptr<cdk::basic_type>> input;
+  for (size_t i = 0; i < node->arguments()->size(); i++){
+    input.push_back(node->argument(i)->type());
+  }
+
+  std::cout << node->type()->to_string() << std::endl;
+  node->type(cdk::functional_type::create(input, node->type())); 
+
+  node->block()->accept(this, lvl);
 }
 
 void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
+  node->retval()->accept(this, lvl);
   // TODO
 }
 

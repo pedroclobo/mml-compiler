@@ -58,8 +58,29 @@ void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
   }
 }
 void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+
+  auto fun_type = cdk::functional_type::cast(this->functionType());
+  auto ret_type = fun_type->output(0);
+
+  if (ret_type->name() != cdk::TYPE_VOID) {
+    node->retval()->accept(this, lvl);
+    if (ret_type->name() == cdk::TYPE_INT || ret_type->name() == cdk::TYPE_STRING || ret_type->name() == cdk::TYPE_POINTER || ret_type->name() == cdk::TYPE_FUNCTIONAL) {
+      _pf.STFVAL32();
+    } else if (ret_type->name() == cdk::TYPE_DOUBLE) {
+      if (node->retval()->type()->name() == cdk::TYPE_INT) {
+	    _pf.I2D();
+	  }
+      _pf.STFVAL64();
+    } else {
+      std::cerr << node->lineno() << ": should not happen: unknown return type" << std::endl;
+    }
+  }
+
+  _pf.JMP(this->returnLabel());
+  this->setReturnSeen(true);
 }
+
 void mml::postfix_writer::do_index_node(mml::index_node * const node, int lvl) {
   // EMPTY
 }
@@ -71,12 +92,8 @@ void mml::postfix_writer::do_stack_alloc_node(mml::stack_alloc_node * const node
   // EMPTY
 }
 void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
-  if (node->declarations()) {
-    node->declarations()->accept(this, lvl);
-  }
-  if (node->instructions()) {
-    node->instructions()->accept(this, lvl);
-  }
+  node->declarations()->accept(this, lvl);
+  node->instructions()->accept(this, lvl);
 }
 
 void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
@@ -134,11 +151,79 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 }
 
 void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
-  // EMPTY
+  int argsSize = 0;
+  for (int i = node->arguments()->size() - 1; i >= 0; i--) {
+    auto arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
+    arg->accept(this, lvl);
+    argsSize += arg->type()->size();
+  }
+
+  auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->function());
+  auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
+  auto identifier = var_node->name();
+
+  _pf.ADDR("_L1");
+  _pf.BRANCH();
+
+  if (argsSize > 0) {
+    _pf.TRASH(argsSize);
+  }
+
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.LDFVAL64();
+  } else {
+    _pf.LDFVAL32();
+  }
 }
+
 void mml::postfix_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
-  // EMPTY
+  int lbl = ++_lbl;
+
+  // remember the text label of the function
+  this->pushTextLabel(mklbl(lbl));
+
+  // remeber the return label of the function
+  this->pushReturnLabel(mklbl(++_lbl));
+
+  // remember the function type
+  this->pushFunctionType(node->type());
+
+  this->pushReturnSeen();
+
+  // calculate function frame size
+  frame_size_calculator frame_calc(_compiler, _symtab);
+  node->accept(&frame_calc, lvl);
+
+  // define address of function
+  _pf.SADDR(mklbl(lbl));
+
+  _symtab.push();
+
+  // define function in text segment
+  _pf.TEXT(mklbl(lbl));
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(lbl));
+  _pf.ENTER(frame_calc.size());
+
+  _isGlobal = false;
+
+  if (node->block()) {
+    node->block()->accept(this, lvl);
+  }
+
+  _pf.ALIGN();
+  _pf.LABEL(this->returnLabel());
+  _pf.LEAVE();
+  _pf.RET();
+
+  _symtab.pop();
+
+  this->popReturnSeen();
+  this->popFunctionType();
+  this->popReturnLabel();
+  this->popTextLabel();
 }
+
 void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
   _isGlobal = true;
 
@@ -147,6 +232,10 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   }
 
   _isGlobal = false;
+
+  this->pushReturnLabel(mklbl(++_lbl));
+  this->pushFunctionType(cdk::functional_type::create(cdk::primitive_type::create(4, cdk::TYPE_INT)));
+  this->pushReturnSeen();
 
   // calculate stack size for main function
   frame_size_calculator frame_calc(_compiler, _symtab);
@@ -164,8 +253,13 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   }
 
   // end the main function
-  _pf.INT(0);
-  _pf.STFVAL32();
+  if (!this->returnSeen()) {
+    _pf.INT(0);
+    _pf.STFVAL32();
+  } else {
+    _pf.ALIGN();
+    _pf.LABEL(this->returnLabel());
+  }
   _pf.LEAVE();
   _pf.RET();
 
@@ -175,6 +269,10 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   _pf.EXTERN("prints");
   _pf.EXTERN("printd");
   _pf.EXTERN("println");
+
+  this->popReturnSeen();
+  this->popFunctionType();
+  this->popReturnLabel();
 }
 
 //---------------------------------------------------------------------------
@@ -216,7 +314,11 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
     _pf.DATA();
     _pf.SADDR(mklbl(lbl1));
   } else {
-    _pf.TEXT();
+    if (this->textLabel() == "") {
+      _pf.TEXT();
+    } else {
+      _pf.TEXT(this->textLabel());
+    }
     _pf.ADDR(mklbl(lbl1));
   }
 }
@@ -330,11 +432,21 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 
 void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  node->argument()->accept(this, lvl); // determine the value
+  node->argument()->accept(this, lvl);
   if (node->argument()->is_typed(cdk::TYPE_INT)) {
-    _pf.TRASH(4); // delete the evaluated value
+    _pf.TRASH(4);
   } else if (node->argument()->is_typed(cdk::TYPE_STRING)) {
-    _pf.TRASH(4); // delete the evaluated value's address
+    _pf.TRASH(4);
+  } else if (node->argument()->is_typed(cdk::TYPE_VOID)) {
+    // don't trash
+  } else if (node->argument()->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.TRASH(8);
+  } else if (node->argument()->is_typed(cdk::TYPE_FUNCTIONAL)) {
+    auto func_type = cdk::functional_type::cast(node->argument()->type());
+    int ret_size = func_type->output(0)->size();
+    if (ret_size != 0) {
+      _pf.TRASH(ret_size);
+    }
   } else {
     std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
     exit(1);
