@@ -4,7 +4,6 @@
 #include <string>
 #include <memory>
 #include <cdk/types/basic_type.h>
-// #include "mml_parser.tab.h"
 
 namespace mml {
 
@@ -13,12 +12,11 @@ namespace mml {
     std::string _identifier;
     int _qualifier;
     int _offset;
-    bool _function;
     bool _global;
 
   public:
-    symbol(std::shared_ptr<cdk::basic_type> type, const std::string &identifier, int qualifier, bool function, bool global) :
-        _type(type), _identifier(identifier), _qualifier(qualifier), _offset(0), _function(function), _global(global) {
+    symbol(std::shared_ptr<cdk::basic_type> type, const std::string &identifier, int qualifier) :
+        _type(type), _identifier(identifier), _qualifier(qualifier), _offset(0), _global(false) {
     }
 
     virtual ~symbol() {
@@ -43,14 +41,11 @@ namespace mml {
     int offset() const {
       return _offset;
     }
-    bool function() const {
-      return _function;
-    }
-    bool global() const {
-	  return _global;
-    }
     void global(bool global) {
       _global = global;
+    }
+    bool global() const {
+      return _global;
     }
   };
 

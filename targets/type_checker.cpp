@@ -539,7 +539,7 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
   }
 
   // FIXME: handle other types (function not supported)
-  auto symbol = std::make_shared<mml::symbol>(node->type(), node->identifier(), node->qualifier(), false, false);
+  auto symbol = std::make_shared<mml::symbol>(node->type(), node->identifier(), node->qualifier());
   if (!_symtab.insert(node->identifier(), symbol)){
     auto old_symbol = _symtab.find(node->identifier());
     if (old_symbol->qualifier() == tFORWARD) {
