@@ -19,8 +19,6 @@ namespace mml {
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
 
-    bool _isGlobal = true;
-    int _offset = 0; // FP offset
     std::vector<int> _whileCond, _whileEnd;
 
     std::stack<std::string> _textLabels; // text label of current function
@@ -28,6 +26,9 @@ namespace mml {
     std::stack<std::string> _returnLabels; // label of current function return
     std::stack<bool> _returnSeen;
     std::set<std::string> _foreignFunctions;
+    std::stack<int> _offsets;
+    std::stack<bool> _functionBodies;
+    std::stack<bool> _functionArgs;
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,
@@ -106,6 +107,63 @@ namespace mml {
 
     inline std::set<std::string> foreignFunctions() {
       return _foreignFunctions;
+    }
+
+  public:
+    inline void pushOffset(int offset) {
+      _offsets.push(offset);
+    }
+
+    inline void popOffset() {
+      _offsets.pop();
+    }
+
+    inline void setOffset(int offset) {
+      _offsets.top() = offset;
+    }
+
+    inline int offset() {
+      return _offsets.top();
+    }
+
+  public:
+    inline void pushFunctionBody(bool functionBody) {
+      _functionBodies.push(functionBody);
+    }
+
+    inline void popFunctionBody() {
+      _functionBodies.pop();
+    }
+
+    inline void setFunctionBody(bool functionBody) {
+      _functionBodies.top() = functionBody;
+    }
+
+    inline bool functionBody() {
+      if (_functionBodies.empty()) {
+        return false;
+      }
+      return _functionBodies.top();
+    }
+
+  public:
+    inline void pushFunctionArgs(bool functionArgs) {
+      _functionArgs.push(functionArgs);
+    }
+
+    inline void popFunctionArgs() {
+      _functionArgs.pop();
+    }
+
+    inline void setFunctionArgs(bool functionArgs) {
+      _functionArgs.top() = functionArgs;
+    }
+
+    inline bool functionArgs() {
+      if (_functionArgs.empty()) {
+        return false;
+      }
+      return _functionArgs.top();
     }
 
   private:

@@ -566,6 +566,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
   ASSERT_UNSPEC;
 
   node->function()->accept(this, lvl);
+  node->arguments()->accept(this, lvl);
   auto func_type = cdk::functional_type::cast(node->function()->type());
   node->type(func_type->output(0));
   // TODO
@@ -581,9 +582,9 @@ void mml::type_checker::do_function_definition_node(mml::function_definition_nod
     input.push_back(node->argument(i)->type());
   }
 
-  std::cout << node->type()->to_string() << std::endl;
   node->type(cdk::functional_type::create(input, node->type()));
 
+  node->arguments()->accept(this, lvl);
   node->block()->accept(this, lvl);
 }
 

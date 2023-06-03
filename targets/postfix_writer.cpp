@@ -101,9 +101,12 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   ASSERT_SAFE_EXPRESSIONS;
 
   int offset = 0;
-  if (!_isGlobal) {
-    _offset -= node->type()->size();
-    offset = _offset;
+  if (this->functionArgs()) {
+    offset = this->offset();
+    this->setOffset(this->offset() + node->type()->size());
+  } else if (this->functionBody()) {
+    this->setOffset(this->offset() - node->type()->size());
+    offset = this->offset();
   }
 
   auto symbol = new_symbol();
@@ -112,7 +115,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     reset_new_symbol();
   }
 
-  if (!_isGlobal) {
+  if (this->functionBody() || this->functionArgs()) {
     symbol->global(false);
     if (node->initializer()) {
       node->initializer()->accept(this, lvl);
@@ -187,15 +190,9 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
 void mml::postfix_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
   int lbl = ++_lbl;
 
-  // remember the text label of the function
   this->pushTextLabel(mklbl(lbl));
-
-  // remeber the return label of the function
   this->pushReturnLabel(mklbl(++_lbl));
-
-  // remember the function type
   this->pushFunctionType(node->type());
-
   this->pushReturnSeen();
 
   // calculate function frame size
@@ -205,7 +202,14 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
   // define address of function
   _pf.SADDR(mklbl(lbl));
 
+  this->pushFunctionArgs(true);
+  this->pushFunctionBody(false);
+
+  this->pushOffset(8);
+
   _symtab.push();
+
+  node->arguments()->accept(this, lvl);
 
   // define function in text segment
   _pf.TEXT(mklbl(lbl));
@@ -213,11 +217,15 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
   _pf.LABEL(mklbl(lbl));
   _pf.ENTER(frame_calc.size());
 
-  _isGlobal = false;
+  this->setOffset(0);
+  this->setFunctionArgs(false);
+  this->setFunctionBody(true);
 
   if (node->block()) {
     node->block()->accept(this, lvl);
   }
+
+  this->setFunctionBody(false);
 
   _pf.ALIGN();
   _pf.LABEL(this->returnLabel());
@@ -226,6 +234,9 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
 
   _symtab.pop();
 
+  this->popFunctionBody();
+  this->popFunctionArgs();
+
   this->popReturnSeen();
   this->popFunctionType();
   this->popReturnLabel();
@@ -233,13 +244,13 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
 }
 
 void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
-  _isGlobal = true;
+  this->pushOffset(0);
 
   if (node->declarations()) {
     node->declarations()->accept(this, lvl);
   }
 
-  _isGlobal = false;
+  this->pushFunctionBody(true);
 
   this->pushReturnLabel(mklbl(++_lbl));
   this->pushFunctionType(cdk::functional_type::create(cdk::primitive_type::create(4, cdk::TYPE_INT)));
@@ -279,6 +290,8 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   this->popReturnSeen();
   this->popFunctionType();
   this->popReturnLabel();
+  this->popOffset();
+  this->popFunctionBody();
 }
 
 //---------------------------------------------------------------------------
@@ -292,18 +305,18 @@ void mml::postfix_writer::do_sequence_node(cdk::sequence_node * const node, int 
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_integer_node(cdk::integer_node * const node, int lvl) {
-  if (_isGlobal) {
-    _pf.SINT(node->value());
-  } else {
+  if (this->functionBody() || this->functionArgs()) {
     _pf.INT(node->value());
+  } else {
+    _pf.SINT(node->value());
   }
 }
 
 void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  if (_isGlobal) {
-    _pf.SDOUBLE(node->value());
-  } else {
+  if (this->functionBody() || this->functionArgs()) {
     _pf.DOUBLE(node->value());
+  } else {
+    _pf.SDOUBLE(node->value());
   }
 }
 
@@ -316,16 +329,16 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
   _pf.LABEL(mklbl(lbl1 = ++_lbl)); // give the string a name
   _pf.SSTRING(node->value()); // output string characters
 
-  if (_isGlobal) {
-    _pf.DATA();
-    _pf.SADDR(mklbl(lbl1));
-  } else {
+  if (this->functionBody() || this->functionArgs()) {
     if (this->textLabel() == "") {
       _pf.TEXT();
     } else {
       _pf.TEXT(this->textLabel());
     }
     _pf.ADDR(mklbl(lbl1));
+  } else {
+    _pf.DATA();
+    _pf.SADDR(mklbl(lbl1));
   }
 }
 
