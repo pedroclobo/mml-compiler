@@ -434,13 +434,17 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
     if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
       node->type(node->lvalue()->type());
     } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER)) {
+      // TODO: nullptr
       auto lvalue_ref = cdk::reference_type::cast(node->lvalue()->type());
       auto rvalue_ref = cdk::reference_type::cast(node->rvalue()->type());
 
-      // TOOO: nullptr
-      if (lvalue_ref->referenced() != rvalue_ref->referenced()) {
-        throw std::string("assignment of imcompatible pointers");
+      // <type> f = [<int>];
+      if (rvalue_ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+        node->rvalue()->type(node->lvalue()->type());
+      } else if (lvalue_ref->referenced()->name() != rvalue_ref->referenced()->name()) {
+        throw std::string("assignment of incompatible pointers");
       }
+
       node->type(node->lvalue()->type());
     } else {
       throw std::string("invalid rvalue operand to assign to pointer lvalue");
@@ -531,6 +535,20 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
     } else if (node->is_typed(cdk::TYPE_STRING)) {
       if (!node->initializer()->is_typed(cdk::TYPE_STRING)) {
         throw std::string("wrong type for initializer: expected string");
+      }
+    } else if (node->is_typed(cdk::TYPE_POINTER)) {
+      if (!node->initializer()->is_typed(cdk::TYPE_POINTER)) {
+        throw std::string("wrong type for initializer: expected pointer");
+      }
+
+      auto ref_type = cdk::reference_type::cast(node->type())->referenced();
+      auto init_ref_type = cdk::reference_type::cast(node->initializer()->type())->referenced();
+      if (!init_ref_type) { // null
+        node->initializer()->type(node->type());
+      } else {
+        if (ref_type->name() != init_ref_type->name()) {
+          throw std::string("assignment of incompatible pointers");
+        }
       }
     }
     // FIXME: handle other types

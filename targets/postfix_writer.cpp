@@ -43,10 +43,17 @@ void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
   _pf.LABEL(mklbl(lbl));
 }
 void mml::postfix_writer::do_address_of_node(mml::address_of_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+  node->lvalue()->accept(this, lvl);
 }
 void mml::postfix_writer::do_null_node(mml::null_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+
+  if (this->functionBody() || this->functionArgs()) {
+    _pf.INT(0);
+  } else {
+    _pf.SINT(0);
+  }
 }
 void mml::postfix_writer::do_stop_node(mml::stop_node * const node, int lvl) {
   if (node->level() <= (int)_whileEnd.size()) {
@@ -83,14 +90,39 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
 }
 
 void mml::postfix_writer::do_index_node(mml::index_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+
+  node->base()->accept(this, lvl);
+  node->index()->accept(this, lvl);
+
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.INT(8);
+  } else {
+    _pf.INT(4);
+  }
+
+  _pf.MUL();
+  _pf.ADD();
 }
 void mml::postfix_writer::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   _pf.INT(node->expression()->type()->size());
 }
 void mml::postfix_writer::do_stack_alloc_node(mml::stack_alloc_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+
+  node->argument()->accept(this, lvl);
+
+  auto ref_type = cdk::reference_type::cast(node->type())->referenced();
+  if (!ref_type || ref_type->name() != cdk::TYPE_DOUBLE) {
+    _pf.INT(4);
+  } else {
+    _pf.INT(8);
+  }
+
+  _pf.MUL();
+  _pf.ALLOC();
+  _pf.SP();
 }
 void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
   node->declarations()->accept(this, lvl);
@@ -366,11 +398,27 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
   node->left()->accept(this, lvl);
   if (node->is_typed(cdk::TYPE_DOUBLE) && node->left()->is_typed(cdk::TYPE_INT)) {
     _pf.I2D();
+  } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
+    auto ref_type = cdk::reference_type::cast(node->type())->referenced();
+    if (ref_type->name() == cdk::TYPE_POINTER || ref_type->name() == cdk::TYPE_INT) {
+      _pf.INT(4);
+    } else if (ref_type->name() == cdk::TYPE_DOUBLE) {
+      _pf.INT(8);
+    }
+    _pf.MUL();
   }
 
   node->right()->accept(this, lvl);
   if (node->is_typed(cdk::TYPE_DOUBLE) && node->right()->is_typed(cdk::TYPE_INT)) {
     _pf.I2D();
+  } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
+    auto ref_type = cdk::reference_type::cast(node->type())->referenced();
+    if (ref_type->name() == cdk::TYPE_POINTER || ref_type->name() == cdk::TYPE_INT) {
+      _pf.INT(4);
+    } else if (ref_type->name() == cdk::TYPE_DOUBLE) {
+      _pf.INT(8);
+    }
+    _pf.MUL();
   }
 
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
@@ -489,24 +537,10 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 
 void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
+
   node->argument()->accept(this, lvl);
-  if (node->argument()->is_typed(cdk::TYPE_INT)) {
-    _pf.TRASH(4);
-  } else if (node->argument()->is_typed(cdk::TYPE_STRING)) {
-    _pf.TRASH(4);
-  } else if (node->argument()->is_typed(cdk::TYPE_VOID)) {
-    // don't trash
-  } else if (node->argument()->is_typed(cdk::TYPE_DOUBLE)) {
-    _pf.TRASH(8);
-  } else if (node->argument()->is_typed(cdk::TYPE_FUNCTIONAL)) {
-    auto func_type = cdk::functional_type::cast(node->argument()->type());
-    int ret_size = func_type->output(0)->size();
-    if (ret_size != 0) {
-      _pf.TRASH(ret_size);
-    }
-  } else {
-    std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
-    exit(1);
+  if (node->argument()->type()->size() != 0) {
+    _pf.TRASH(node->argument()->type()->size());
   }
 }
 
