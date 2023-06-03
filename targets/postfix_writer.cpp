@@ -157,10 +157,18 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 }
 
 void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  auto func_type = cdk::functional_type::cast(node->function()->type());
+
   int argsSize = 0;
   for (int i = node->arguments()->size() - 1; i >= 0; i--) {
     auto arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
+    auto type = func_type->input(i);
     arg->accept(this, lvl);
+    if (arg->is_typed(cdk::TYPE_INT) && type->name() == cdk::TYPE_DOUBLE) {
+      _pf.I2D();
+    }
     argsSize += arg->type()->size();
   }
 
@@ -354,9 +362,22 @@ void mml::postfix_writer::do_neg_node(cdk::neg_node * const node, int lvl) {
 
 void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
+
   node->left()->accept(this, lvl);
+  if (node->is_typed(cdk::TYPE_DOUBLE) && node->left()->is_typed(cdk::TYPE_INT)) {
+    _pf.I2D();
+  }
+
   node->right()->accept(this, lvl);
-  _pf.ADD();
+  if (node->is_typed(cdk::TYPE_DOUBLE) && node->right()->is_typed(cdk::TYPE_INT)) {
+    _pf.I2D();
+  }
+
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.DADD();
+  } else {
+    _pf.ADD();
+  }
 }
 void mml::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
@@ -434,17 +455,34 @@ void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int 
 
 void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
+
   node->lvalue()->accept(this, lvl);
-  _pf.LDINT(); // depends on type size
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.LDDOUBLE();
+  } else {
+    _pf.LDINT();
+  }
 }
 
 void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
+
   node->rvalue()->accept(this, lvl);
-  _pf.DUP32();
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
+      _pf.I2D();
+    }
+    _pf.DUP64();
+  } else {
+    _pf.DUP32();
+  }
 
   node->lvalue()->accept(this, lvl);
-  _pf.STINT();
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.STDOUBLE();
+  } else {
+    _pf.STINT();
+  }
 }
 
 //---------------------------------------------------------------------------
