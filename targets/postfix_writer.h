@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include <stack>
+#include <set>
 #include <cdk/emitters/basic_postfix_emitter.h>
 
 namespace mml {
@@ -26,6 +27,7 @@ namespace mml {
     std::stack<std::shared_ptr<cdk::basic_type>> _functionTypes; // type of current function
     std::stack<std::string> _returnLabels; // label of current function return
     std::stack<bool> _returnSeen;
+    std::set<std::string> _foreignFunctions;
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,
@@ -95,6 +97,15 @@ namespace mml {
 
     inline bool returnSeen() {
       return _returnSeen.top();
+    }
+
+  public:
+    inline void addForeignFunction(std::string identifier) {
+      _foreignFunctions.insert(identifier);
+    }
+
+    inline std::set<std::string> foreignFunctions() {
+      return _foreignFunctions;
     }
 
   private:

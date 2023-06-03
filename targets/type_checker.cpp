@@ -2,6 +2,7 @@
 #include "targets/type_checker.h"
 #include ".auto/all_nodes.h"  // automatically generated
 #include <cdk/types/primitive_type.h>
+#include "mml_parser.tab.h"
 
 #define ASSERT_UNSPEC { if (node->type() != nullptr && !node->is_typed(cdk::TYPE_UNSPEC)) return; }
 
@@ -540,8 +541,12 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
   // FIXME: handle other types (function not supported)
   auto symbol = std::make_shared<mml::symbol>(node->type(), node->identifier(), node->qualifier(), false, false);
   if (!_symtab.insert(node->identifier(), symbol)){
-    // TODO: handle foreign
-    throw std::string(node->identifier() + " redeclared");
+    auto old_symbol = _symtab.find(node->identifier());
+    if (old_symbol->qualifier() == tFORWARD) {
+      _symtab.replace(node->identifier(), symbol);
+    } else {
+      throw std::string(node->identifier() + " redeclared");
+    }
   }
 
   _parent->set_new_symbol(symbol);
@@ -568,7 +573,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
 
 void mml::type_checker::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
   if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
-    return;    
+    return;
   }
 
   std::vector<std::shared_ptr<cdk::basic_type>> input;
@@ -577,7 +582,7 @@ void mml::type_checker::do_function_definition_node(mml::function_definition_nod
   }
 
   std::cout << node->type()->to_string() << std::endl;
-  node->type(cdk::functional_type::create(input, node->type())); 
+  node->type(cdk::functional_type::create(input, node->type()));
 
   node->block()->accept(this, lvl);
 }

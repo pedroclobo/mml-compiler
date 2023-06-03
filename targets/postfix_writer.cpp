@@ -4,6 +4,7 @@
 #include "targets/postfix_writer.h"
 #include "targets/frame_size_calculator.h"
 #include ".auto/all_nodes.h"  // all_nodes.h is automatically generated
+#include "mml_parser.tab.h"
 
 //---------------------------------------------------------------------------
 
@@ -69,8 +70,8 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
       _pf.STFVAL32();
     } else if (ret_type->name() == cdk::TYPE_DOUBLE) {
       if (node->retval()->type()->name() == cdk::TYPE_INT) {
-	    _pf.I2D();
-	  }
+        _pf.I2D();
+      }
       _pf.STFVAL64();
     } else {
       std::cerr << node->lineno() << ": should not happen: unknown return type" << std::endl;
@@ -99,12 +100,6 @@ void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
 void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  // auto symbol = _symtab.find_local(node->identifier());
-  //
-  // if (!symbol) {
-  //   throw new std::string(node->identifier() + " not found");
-  // }
-
   int offset = 0;
   if (!_isGlobal) {
     _offset -= node->type()->size();
@@ -113,12 +108,12 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 
   auto symbol = new_symbol();
   if (symbol) {
-	symbol->offset(offset);
+    symbol->offset(offset);
     reset_new_symbol();
   }
 
   if (!_isGlobal) {
-	symbol->global(false);
+    symbol->global(false);
     if (node->initializer()) {
       node->initializer()->accept(this, lvl);
       if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_STRING)) {
@@ -133,7 +128,15 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
       }
     }
   } else {
-	symbol->global(true);
+    // FIXME: should add symbol?
+    if (node->qualifier() == tFORWARD) {
+      return;
+    // FIXME: should add symbol?
+    } else if (node->qualifier() == tFOREIGN) {
+      this->addForeignFunction(node->identifier());
+      return;
+    }
+    symbol->global(true);
     if (!node->initializer()) {
       _pf.BSS();
       _pf.ALIGN();
@@ -162,8 +165,13 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
   auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
   auto identifier = var_node->name();
 
-  _pf.ADDR("_L1");
-  _pf.BRANCH();
+  auto symbol = _symtab.find(identifier);
+  if (symbol->qualifier() == tFOREIGN) {
+    _pf.CALL(symbol->identifier());
+  } else {
+    _pf.ADDR("_L1");
+    _pf.BRANCH();
+  }
 
   if (argsSize > 0) {
     _pf.TRASH(argsSize);
@@ -263,12 +271,10 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   _pf.LEAVE();
   _pf.RET();
 
-  // these are just a few library function imports
-  _pf.EXTERN("readi");
-  _pf.EXTERN("printi");
-  _pf.EXTERN("prints");
-  _pf.EXTERN("printd");
-  _pf.EXTERN("println");
+  auto foreigns = this->foreignFunctions();
+  for (auto identifier = foreigns.begin(); identifier != foreigns.end(); ++identifier) {
+    _pf.EXTERN(*identifier);
+  }
 
   this->popReturnSeen();
   this->popFunctionType();
@@ -463,12 +469,15 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
     if (child->is_typed(cdk::TYPE_INT)) {
       _pf.CALL("printi");
       _pf.TRASH(4);
+      this->addForeignFunction("printi");
     } else if (child->is_typed(cdk::TYPE_STRING)) {
       _pf.CALL("prints");
       _pf.TRASH(4);
+      this->addForeignFunction("prints");
     } else if (child->is_typed(cdk::TYPE_DOUBLE)) {
       _pf.CALL("printd");
       _pf.TRASH(8);
+      this->addForeignFunction("printd");
     } else {
       std::cerr << "ERROR: CANNOT PRINT EXPRESSION OF UNKNOWN TYPE" << std::endl;
       exit(1);
@@ -476,7 +485,8 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
   }
 
   if (node->newline()) {
-    _pf.CALL("println"); // print a newline
+    _pf.CALL("println");
+    this->addForeignFunction("println");
   }
 }
 
@@ -487,6 +497,7 @@ void mml::postfix_writer::do_read_node(mml::read_node * const node, int lvl) {
   _pf.CALL("readi");
   _pf.LDFVAL32();
   _pf.STINT();
+  this->addForeignFunction("readi");
 }
 
 //---------------------------------------------------------------------------
