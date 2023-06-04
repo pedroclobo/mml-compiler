@@ -175,13 +175,17 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     if (!node->initializer()) {
       _pf.BSS();
       _pf.ALIGN();
-      _pf.GLOBAL(node->identifier(), _pf.OBJ()); // TODO: is this right?
+      if (node->qualifier() == tPUBLIC) {
+        _pf.GLOBAL(node->identifier(), _pf.OBJ());
+      }
       _pf.LABEL(node->identifier());
       _pf.SALLOC(node->type()->size());
     } else {
       _pf.DATA();
       _pf.ALIGN();
-      _pf.GLOBAL(node->identifier(), _pf.OBJ()); // TODO: is this right?
+      if (node->qualifier() == tPUBLIC) {
+        _pf.GLOBAL(node->identifier(), _pf.OBJ());
+      }
       _pf.LABEL(node->identifier());
       node->initializer()->accept(this, lvl);
     }
