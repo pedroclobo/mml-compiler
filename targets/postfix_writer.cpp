@@ -215,13 +215,19 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
   }
 
   if (node->function()) {
+    // f() or lambda()
     auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->function());
-    auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
-    auto identifier = var_node->name();
+    if (rval_node) {
+      auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
+      auto identifier = var_node->name();
 
-    auto symbol = _symtab.find(identifier);
-    if (symbol->qualifier() == tFOREIGN) {
-      _pf.CALL(symbol->identifier());
+      auto symbol = _symtab.find(identifier);
+      if (symbol->qualifier() == tFOREIGN) {
+        _pf.CALL(symbol->identifier());
+      } else {
+        node->function()->accept(this, lvl);
+        _pf.BRANCH();
+      }
     } else {
       node->function()->accept(this, lvl);
       _pf.BRANCH();
