@@ -302,7 +302,8 @@ void mml::xml_writer::do_program_node(mml::program_node * const node, int lvl) {
 
 void mml::xml_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
+  os() << std::string(lvl, ' ') << "<" << node->label()
+       << " type='" << ttos(node->type()) << "'>" << std::endl;
   openTag("function", lvl + 2);
   if (node->function()) {
     node->function()->accept(this, lvl + 4);
@@ -317,7 +318,8 @@ void mml::xml_writer::do_function_call_node(mml::function_call_node * const node
 void mml::xml_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   _symtab.push();
-  openTag(node, lvl);
+  os() << std::string(lvl, ' ') << "<" << node->label()
+       << " type='" << ttos(node->type()) << "'>" << std::endl;
   openTag("arguments", lvl + 2);
   node->arguments()->accept(this, lvl + 4);
   closeTag("arguments", lvl + 2);
