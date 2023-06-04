@@ -158,17 +158,17 @@ void mml::frame_size_calculator::do_block_node(mml::block_node * const node, int
 }
 
 void mml::frame_size_calculator::do_declaration_node(mml::declaration_node * const node, int lvl) {
-  _symtab.push();
   ASSERT_SAFE_EXPRESSIONS;
-  _symtab.pop();
 
   _size += node->type()->size();
 }
 
 void mml::frame_size_calculator::do_program_node(mml::program_node * const node, int lvl) {
+  _symtab.push();
   if (node->block()) {
     node->block()->accept(this, lvl);
   }
+  _symtab.pop();
 }
 
 //---------------------------------------------------------------------------
@@ -178,8 +178,9 @@ void mml::frame_size_calculator::do_function_call_node(mml::function_call_node *
 }
 
 void mml::frame_size_calculator::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
-  // FIXME: should accept arguments?
+  _symtab.push();
   node->block()->accept(this, lvl);
+  _symtab.pop();
 }
 
 void mml::frame_size_calculator::do_return_node(mml::return_node * const node, int lvl) {

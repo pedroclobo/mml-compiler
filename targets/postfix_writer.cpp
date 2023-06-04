@@ -125,8 +125,10 @@ void mml::postfix_writer::do_stack_alloc_node(mml::stack_alloc_node * const node
   _pf.SP();
 }
 void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
+  _symtab.push();
   node->declarations()->accept(this, lvl);
   node->instructions()->accept(this, lvl);
+  _symtab.pop();
 }
 
 void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
@@ -151,7 +153,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     symbol->global(false);
     if (node->initializer()) {
       node->initializer()->accept(this, lvl);
-      if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_STRING)) {
+      if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_STRING) || node->is_typed(cdk::TYPE_POINTER) || node->is_typed(cdk::TYPE_FUNCTIONAL)) {
         _pf.LOCAL(symbol->offset());
         _pf.STINT();
       } else if (node->is_typed(cdk::TYPE_DOUBLE)) {
@@ -618,7 +620,6 @@ void mml::postfix_writer::do_read_node(mml::read_node * const node, int lvl) {
 
 void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  _symtab.push();
 
   int condition, end;
   _whileCond.push_back(condition = ++_lbl);
@@ -635,8 +636,6 @@ void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
 
   _whileCond.pop_back();
   _whileEnd.pop_back();
-
-  _symtab.pop();
 }
 
 //---------------------------------------------------------------------------

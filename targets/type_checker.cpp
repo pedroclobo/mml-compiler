@@ -479,6 +479,8 @@ void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
     auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
     if (child->is_typed(cdk::TYPE_POINTER)) {
       throw std::string("pointers cannot be printed");
+    } else if (child->is_typed(cdk::TYPE_FUNCTIONAL)) {
+      throw std::string("functions cannot be printed");
     }
   }
 }
@@ -496,8 +498,7 @@ void mml::type_checker::do_read_node(mml::read_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_while_node(mml::while_node *const node, int lvl) {
-  node->condition()->accept(this, lvl);
-  node->block()->accept(this, lvl);
+  // EMPTY
 }
 
 void mml::type_checker::do_stop_node(mml::stop_node * const node, int lvl) {
@@ -512,25 +513,24 @@ void mml::type_checker::do_next_node(mml::next_node * const node, int lvl) {
 
 void mml::type_checker::do_if_node(mml::if_node *const node, int lvl) {
   node->condition()->accept(this, lvl);
-  node->block()->accept(this, lvl);
+
+  if (!node->condition()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("expected integer condition");
+  }
 }
 
 void mml::type_checker::do_if_else_node(mml::if_else_node *const node, int lvl) {
   node->condition()->accept(this, lvl);
-  node->thenblock()->accept(this, lvl);
-  node->elseblock()->accept(this, lvl);
+
+  if (!node->condition()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("expected integer condition");
+  }
 }
 
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_block_node(mml::block_node * const node, int lvl) {
-  _symtab.push();
-
-  // TODO: probably needed to calculate frame size
-  node->declarations()->accept(this, lvl);
-  node->instructions()->accept(this, lvl);
-
-  _symtab.pop();
+  // EMPTY
 }
 
 void mml::type_checker::do_declaration_node(mml::declaration_node * const node, int lvl) {
@@ -587,15 +587,7 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
 }
 
 void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) {
-  this->pushFunctionType(cdk::functional_type::create(cdk::primitive_type::create(4, cdk::TYPE_INT)));
-
-  node->declarations()->accept(this, lvl);
-
-  _symtab.push();
-  node->block()->accept(this, lvl);
-  _symtab.pop();
-
-  this->popFunctionType();
+  // EMPTY
 }
 
 //---------------------------------------------------------------------------
@@ -618,25 +610,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
 }
 
 void mml::type_checker::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
-  if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
-    return;
-  }
-
-  std::vector<std::shared_ptr<cdk::basic_type>> input;
-  for (size_t i = 0; i < node->arguments()->size(); i++){
-    input.push_back(node->argument(i)->type());
-  }
-
-  node->type(cdk::functional_type::create(input, node->type()));
-
-  this->pushFunctionType(node->type());
-
-  _symtab.push();
-  node->arguments()->accept(this, lvl);
-  node->block()->accept(this, lvl);
-  _symtab.pop();
-
-  this->popFunctionType();
+  // EMPTY
 }
 
 void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
@@ -647,7 +621,6 @@ void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_index_node(mml::index_node * const node, int lvl) {
-  // TODO: functions can't be indexed
   ASSERT_UNSPEC;
 
   node->base()->accept(this, lvl + 2);
