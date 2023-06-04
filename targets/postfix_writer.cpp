@@ -216,7 +216,7 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
   if (symbol->qualifier() == tFOREIGN) {
     _pf.CALL(symbol->identifier());
   } else {
-    _pf.ADDR("_L1");
+    node->function()->accept(this, lvl);
     _pf.BRANCH();
   }
 
@@ -243,12 +243,8 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
   frame_size_calculator frame_calc(_compiler, _symtab);
   node->accept(&frame_calc, lvl);
 
-  // define address of function
-  _pf.SADDR(mklbl(lbl));
-
   this->pushFunctionArgs(true);
   this->pushFunctionBody(false);
-
   this->pushOffset(8);
 
   _symtab.push();
@@ -285,6 +281,18 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
   this->popFunctionType();
   this->popReturnLabel();
   this->popTextLabel();
+
+  if (this->functionBody() || this->functionArgs()) {
+    if (this->textLabel() == "") {
+      _pf.TEXT();
+    } else {
+      _pf.TEXT(this->textLabel());
+    }
+    _pf.ADDR(mklbl(lbl));
+  } else {
+    _pf.DATA();
+    _pf.SADDR(mklbl(lbl));
+  }
 }
 
 void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {

@@ -430,6 +430,12 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
     } else {
       throw std::string("invalid rvalue operand to assign to double lvalue");
     }
+  } else if (node->lvalue()->is_typed(cdk::TYPE_STRING)) {
+    if (node ->rvalue()->is_typed(cdk::TYPE_STRING)) {
+      node->type(node->lvalue()->type());
+    } else {
+      throw std::string("invalid rvalue operand to assign to string lvalue");
+    }
   } else if (node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
     if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
       node->type(node->lvalue()->type());
@@ -448,6 +454,13 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
       node->type(node->lvalue()->type());
     } else {
       throw std::string("invalid rvalue operand to assign to pointer lvalue");
+    }
+  } else if (node->lvalue()->is_typed(cdk::TYPE_FUNCTIONAL)) {
+    if (node->rvalue()->is_typed(cdk::TYPE_FUNCTIONAL)) {
+      // FIXME
+      node->type(node->lvalue()->type());
+    } else {
+      throw std::string("invalid rvalue operand to assign to function lvalue");
     }
   } else {
     throw std::string("incompatible arguments in assignment operation");
@@ -558,6 +571,9 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
 
   // FIXME: handle other types (function not supported)
   auto symbol = std::make_shared<mml::symbol>(node->type(), node->identifier(), node->qualifier());
+  if (node->qualifier() == tFORWARD) {
+    symbol->global(true);
+  }
   if (!_symtab.insert(node->identifier(), symbol)){
     auto old_symbol = _symtab.find(node->identifier());
     if (old_symbol->qualifier() == tFORWARD) {
@@ -602,8 +618,10 @@ void mml::type_checker::do_function_definition_node(mml::function_definition_nod
 
   node->type(cdk::functional_type::create(input, node->type()));
 
+  _symtab.push();
   node->arguments()->accept(this, lvl);
   node->block()->accept(this, lvl);
+  _symtab.pop();
 }
 
 void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
