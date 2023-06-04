@@ -227,6 +227,7 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
       _pf.BRANCH();
     }
   } else {
+    _pf.ADDR(this->textLabel());
     _pf.BRANCH();
   }
 
