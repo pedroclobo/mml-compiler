@@ -195,7 +195,13 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  auto func_type = cdk::functional_type::cast(node->function()->type());
+  std::shared_ptr<cdk::basic_type> type;
+  if (!node->function()) {
+    type = this->functionType();
+  } else {
+    type = node->function()->type();
+  }
+  auto func_type = cdk::functional_type::cast(type);
 
   int argsSize = 0;
   for (int i = node->arguments()->size() - 1; i >= 0; i--) {
@@ -208,15 +214,19 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
     argsSize += arg->type()->size();
   }
 
-  auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->function());
-  auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
-  auto identifier = var_node->name();
+  if (node->function()) {
+    auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->function());
+    auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
+    auto identifier = var_node->name();
 
-  auto symbol = _symtab.find(identifier);
-  if (symbol->qualifier() == tFOREIGN) {
-    _pf.CALL(symbol->identifier());
+    auto symbol = _symtab.find(identifier);
+    if (symbol->qualifier() == tFOREIGN) {
+      _pf.CALL(symbol->identifier());
+    } else {
+      node->function()->accept(this, lvl);
+      _pf.BRANCH();
+    }
   } else {
-    node->function()->accept(this, lvl);
     _pf.BRANCH();
   }
 

@@ -587,11 +587,15 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
 }
 
 void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) {
+  this->pushFunctionType(cdk::functional_type::create(cdk::primitive_type::create(4, cdk::TYPE_INT)));
+
   node->declarations()->accept(this, lvl);
 
   _symtab.push();
   node->block()->accept(this, lvl);
   _symtab.pop();
+
+  this->popFunctionType();
 }
 
 //---------------------------------------------------------------------------
@@ -599,9 +603,16 @@ void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) 
 void mml::type_checker::do_function_call_node(mml::function_call_node * const node, int lvl) {
   ASSERT_UNSPEC;
 
-  node->function()->accept(this, lvl);
+  std::shared_ptr<cdk::basic_type> type;
+  if (!node->function()) {
+    type = this->functionType();
+  } else {
+    node->function()->accept(this, lvl);
+    type = node->function()->type();
+  }
+
   node->arguments()->accept(this, lvl);
-  auto func_type = cdk::functional_type::cast(node->function()->type());
+  auto func_type = cdk::functional_type::cast(type);
   node->type(func_type->output(0));
   // TODO
 }
@@ -618,10 +629,14 @@ void mml::type_checker::do_function_definition_node(mml::function_definition_nod
 
   node->type(cdk::functional_type::create(input, node->type()));
 
+  this->pushFunctionType(node->type());
+
   _symtab.push();
   node->arguments()->accept(this, lvl);
   node->block()->accept(this, lvl);
   _symtab.pop();
+
+  this->popFunctionType();
 }
 
 void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {

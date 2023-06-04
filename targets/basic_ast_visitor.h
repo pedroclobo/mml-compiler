@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <iostream>
+#include <stack>
 #include <cdk/compiler.h>
 #include <cdk/symbol_table.h>
 #include "targets/symbol.h"
@@ -26,6 +27,7 @@ private:
 
   // last symbol inserted in symbol table
   std::shared_ptr<mml::symbol> _new_symbol;
+  std::stack<std::shared_ptr<cdk::basic_type>> _functionTypes; // type of current function
 
 protected:
   basic_ast_visitor(std::shared_ptr<cdk::compiler> compiler) :
@@ -55,6 +57,19 @@ public:
 
   void reset_new_symbol() {
     _new_symbol = nullptr;
+  }
+
+public:
+  inline void pushFunctionType(std::shared_ptr<cdk::basic_type> functionType) {
+    _functionTypes.push(functionType);
+  }
+
+  inline void popFunctionType() {
+    _functionTypes.pop();
+  }
+
+  inline std::shared_ptr<cdk::basic_type> functionType() {
+    return _functionTypes.top();
   }
 
 public:
