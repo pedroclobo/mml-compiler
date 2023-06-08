@@ -33,13 +33,12 @@ void mml::postfix_writer::do_integer_node(cdk::integer_node * const node, int lv
 }
 
 void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl) {
-  int lbl1;
+  int lbl;
 
-  /* generate the string */
-  _pf.RODATA(); // strings are DATA readonly
-  _pf.ALIGN(); // make sure we are aligned
-  _pf.LABEL(mklbl(lbl1 = ++_lbl)); // give the string a name
-  _pf.SSTRING(node->value()); // output string characters
+  _pf.RODATA();
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(lbl = ++_lbl));
+  _pf.SSTRING(node->value());
 
   if (this->functionBody() || this->functionArgs()) {
     if (this->textLabel() == "") {
@@ -47,10 +46,10 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
     } else {
       _pf.TEXT(this->textLabel());
     }
-    _pf.ADDR(mklbl(lbl1));
+    _pf.ADDR(mklbl(lbl));
   } else {
     _pf.DATA();
-    _pf.SADDR(mklbl(lbl1));
+    _pf.SADDR(mklbl(lbl));
   }
 }
 
