@@ -55,7 +55,18 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
 
 void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
   if (this->functionBody() || this->functionArgs()) {
-    _pf.DOUBLE(node->value());
+    int lbl;
+    _pf.RODATA();
+    _pf.ALIGN();
+    _pf.LABEL(mklbl(lbl = ++_lbl));
+    _pf.SDOUBLE(node->value());
+    if (this->textLabel() == "") {
+      _pf.TEXT();
+    } else {
+      _pf.TEXT(this->textLabel());
+    }
+    _pf.ADDR(mklbl(lbl));
+    _pf.LDDOUBLE();
   } else {
     _pf.SDOUBLE(node->value());
   }
