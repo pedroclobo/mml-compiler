@@ -93,8 +93,8 @@ void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
 
 void mml::postfix_writer::do_neg_node(cdk::neg_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  node->argument()->accept(this, lvl); // determine the value
-  _pf.NEG(); // 2-complement
+  node->argument()->accept(this, lvl);
+  _pf.NEG();
 }
 
 void mml::postfix_writer::do_stack_alloc_node(mml::stack_alloc_node * const node, int lvl) {
@@ -103,10 +103,10 @@ void mml::postfix_writer::do_stack_alloc_node(mml::stack_alloc_node * const node
   node->argument()->accept(this, lvl);
 
   auto ref_type = cdk::reference_type::cast(node->type())->referenced();
-  if (!ref_type || ref_type->name() != cdk::TYPE_DOUBLE) {
-    _pf.INT(4);
-  } else {
+  if (ref_type->name() == cdk::TYPE_DOUBLE) {
     _pf.INT(8);
+  } else {
+    _pf.INT(4);
   }
 
   _pf.MUL();
@@ -124,11 +124,7 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
     auto ref_type = cdk::reference_type::cast(node->type())->referenced();
-    if (ref_type->name() == cdk::TYPE_POINTER || ref_type->name() == cdk::TYPE_INT) {
-      _pf.INT(4);
-    } else if (ref_type->name() == cdk::TYPE_DOUBLE) {
-      _pf.INT(8);
-    }
+    _pf.INT(ref_type->size());
     _pf.MUL();
   }
 
@@ -137,11 +133,7 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
     auto ref_type = cdk::reference_type::cast(node->type())->referenced();
-    if (ref_type->name() == cdk::TYPE_POINTER || ref_type->name() == cdk::TYPE_INT) {
-      _pf.INT(4);
-    } else if (ref_type->name() == cdk::TYPE_DOUBLE) {
-      _pf.INT(8);
-    }
+    _pf.INT(ref_type->size());
     _pf.MUL();
   }
 

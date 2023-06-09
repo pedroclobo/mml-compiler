@@ -50,6 +50,7 @@ void mml::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
   ASSERT_UNSPEC;
 
   node->argument()->accept(this, lvl);
+
   if (!node->argument()->is_typed(cdk::TYPE_INT)) {
     throw std::string("not expressions only accept integers");
   }
@@ -61,25 +62,26 @@ void mml::type_checker::do_neg_node(cdk::neg_node *const node, int lvl) {
   ASSERT_UNSPEC;
 
   node->argument()->accept(this, lvl);
-  if (!node->argument()->is_typed(cdk::TYPE_INT) && !node->argument()->is_typed(cdk::TYPE_DOUBLE)) {
-    throw std::string("neg expressions only accept integers or doubles");
-  }
 
   if (node->argument()->is_typed(cdk::TYPE_INT)) {
     node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
-  } else {
+  } else if (node->argument()->is_typed(cdk::TYPE_DOUBLE)) {
     node->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
+
+  } else {
+    throw std::string("neg expressions only accept integers or doubles");
   }
 }
 
 void mml::type_checker::do_stack_alloc_node(mml::stack_alloc_node * const node, int lvl) {
   ASSERT_UNSPEC;
+
   node->argument()->accept(this, lvl);
+
   if (!node->argument()->is_typed(cdk::TYPE_INT)) {
     throw std::string("allocation operation only accept integers");
   }
 
-  // TODO: is this right?
   node->type(cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC)));
 }
 
