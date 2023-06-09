@@ -161,7 +161,15 @@ void mml::type_checker::do_sub_node(cdk::sub_node *const node, int lvl) {
     if (node->right()->is_typed(cdk::TYPE_INT)) {
       node->type(node->left()->type());
     } else if (node->right()->is_typed(cdk::TYPE_POINTER)) {
-      if (!matching_references(node->left()->type(), node->right()->type())) {
+      auto l_ref = cdk::reference_type::cast(node->left()->type());
+      auto r_ref = cdk::reference_type::cast(node->right()->type());
+
+      // left or right is null
+      if (!l_ref->referenced() || !r_ref->referenced()) {
+        // the type doesn't matter as the results is undefined
+        node->type(cdk::reference_type::create(4, cdk::primitive_type::create(4, cdk::TYPE_UNSPEC)));
+        return;
+      } else if (!matching_references(node->left()->type(), node->right()->type())) {
         throw std::string("pointers must have the same type in sub operations");
       }
       node->type(node->left()->type());
