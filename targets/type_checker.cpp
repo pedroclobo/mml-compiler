@@ -8,6 +8,7 @@
 
 //---------------------------------------------------------------------------
 
+// TODO: pointer alignment
 bool matching_references(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2) {
   auto ref1 = cdk::reference_type::cast(type1);
   auto ref2 = cdk::reference_type::cast(type2);
@@ -19,6 +20,11 @@ bool matching_references(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr
   }
 
   return false;
+}
+
+bool covariant_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2) {
+  // FIXME
+  return true;
 }
 
 //---------------------------------------------------------------------------
@@ -433,51 +439,61 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
       node->type(node->lvalue()->type());
     } else if (node->rvalue()->is_typed(cdk::TYPE_DOUBLE)) {
       node->type(node->rvalue()->type());
+
+    // HACK: needed to support pointer subtraction
     } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER)) {
-      node->type(node->rvalue()->type());
+      node->type(node->lvalue()->type());
+
     } else {
       throw std::string("invalid rvalue operand to assign to integer lvalue");
     }
+
   } else if (node->lvalue()->is_typed(cdk::TYPE_DOUBLE)) {
     if (node->rvalue()->is_typed(cdk::TYPE_DOUBLE) || node->rvalue()->is_typed(cdk::TYPE_INT)) {
       node->type(node->lvalue()->type());
     } else {
       throw std::string("invalid rvalue operand to assign to double lvalue");
     }
+
   } else if (node->lvalue()->is_typed(cdk::TYPE_STRING)) {
     if (node ->rvalue()->is_typed(cdk::TYPE_STRING)) {
       node->type(node->lvalue()->type());
     } else {
       throw std::string("invalid rvalue operand to assign to string lvalue");
     }
+
   } else if (node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
-    if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
-      node->type(node->lvalue()->type());
-    } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER)) {
-      // TODO: nullptr
-      auto lvalue_ref = cdk::reference_type::cast(node->lvalue()->type());
-      auto rvalue_ref = cdk::reference_type::cast(node->rvalue()->type());
+    if (node->rvalue()->is_typed(cdk::TYPE_POINTER)) {
+      auto rvalue_ref = cdk::reference_type::cast(node->rvalue()->type())->referenced();
+
+      // right is null
+      if (!rvalue_ref) {
+        // EMPTY
 
       // <type> f = [<int>];
-      if (rvalue_ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+      } else if (rvalue_ref->name() == cdk::TYPE_UNSPEC) {
         node->rvalue()->type(node->lvalue()->type());
-      } else if (lvalue_ref->referenced()->name() != rvalue_ref->referenced()->name()) {
+
+      } else if (!matching_references(node->lvalue()->type(), node->rvalue()->type())) {
         throw std::string("assignment of incompatible pointers");
       }
 
       node->type(node->lvalue()->type());
+
     } else {
       throw std::string("invalid rvalue operand to assign to pointer lvalue");
     }
+
   } else if (node->lvalue()->is_typed(cdk::TYPE_FUNCTIONAL)) {
     if (node->rvalue()->is_typed(cdk::TYPE_FUNCTIONAL)) {
-      // FIXME
+      // FIXME: covariant functions
+      if (!covariant_functions(node->lvalue()->type(), node->rvalue()->type())) {
+        throw std::string("assignment of incompatible functions");
+      }
       node->type(node->lvalue()->type());
     } else {
       throw std::string("invalid rvalue operand to assign to function lvalue");
     }
-  } else {
-    throw std::string("incompatible arguments in assignment operation");
   }
 }
 
