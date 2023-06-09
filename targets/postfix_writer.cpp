@@ -443,10 +443,19 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
 
 void mml::postfix_writer::do_read_node(mml::read_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  _pf.CALL("readi");
-  _pf.LDFVAL32();
-  _pf.STINT();
-  this->addForeignFunction("readi");
+
+  if (node->is_typed(cdk::TYPE_INT)) {
+    this->addForeignFunction("readi");
+    _pf.CALL("readi");
+    _pf.LDFVAL32();
+  } else if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    this->addForeignFunction("readd");
+    _pf.CALL("readd");
+    _pf.LDFVAL64();
+  } else {
+    std::cerr << "ERROR: CANNOT READ EXPRESSION OF UNKNOWN TYPE" << std::endl;
+    exit(1);
+  }
 }
 
 //---------------------------------------------------------------------------
