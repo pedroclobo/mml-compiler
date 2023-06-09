@@ -8,6 +8,21 @@
 
 //---------------------------------------------------------------------------
 
+bool matching_references(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2) {
+  auto ref1 = cdk::reference_type::cast(type1);
+  auto ref2 = cdk::reference_type::cast(type2);
+
+  if (ref1->referenced()->name() == cdk::TYPE_POINTER && ref2->referenced()->name() == cdk::TYPE_POINTER) {
+    return matching_references(ref1->referenced(), ref2->referenced());
+  } else if (ref1->referenced()->name() == ref2->referenced()->name()){
+    return true;
+  }
+
+  return false;
+}
+
+//---------------------------------------------------------------------------
+
 void mml::type_checker::do_nil_node(cdk::nil_node *const node, int lvl) {
   // EMPTY
 }
@@ -146,10 +161,7 @@ void mml::type_checker::do_sub_node(cdk::sub_node *const node, int lvl) {
     if (node->right()->is_typed(cdk::TYPE_INT)) {
       node->type(node->left()->type());
     } else if (node->right()->is_typed(cdk::TYPE_POINTER)) {
-      auto left_ref = cdk::reference_type::cast(node->left()->type());
-      auto right_ref = cdk::reference_type::cast(node->right()->type());
-
-      if (left_ref->referenced() != right_ref->referenced()) {
+      if (!matching_references(node->left()->type(), node->right()->type())) {
         throw std::string("pointers must have the same type in sub operations");
       }
       node->type(node->left()->type());
