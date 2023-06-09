@@ -356,8 +356,8 @@ void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
 
 void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  auto symbol = _symtab.find(node->name());
 
+  auto symbol = _symtab.find(node->name());
   if (symbol->global()) {
     _pf.ADDR(symbol->identifier());
   } else {
@@ -413,20 +413,20 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
 
   for (size_t i = 0; i < node->arguments()->size(); i++) {
     auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
-    child->accept(this, lvl); // expression to print
+    child->accept(this, lvl);
 
     if (child->is_typed(cdk::TYPE_INT)) {
+      this->addForeignFunction("printi");
       _pf.CALL("printi");
       _pf.TRASH(4);
-      this->addForeignFunction("printi");
     } else if (child->is_typed(cdk::TYPE_STRING)) {
+      this->addForeignFunction("prints");
       _pf.CALL("prints");
       _pf.TRASH(4);
-      this->addForeignFunction("prints");
     } else if (child->is_typed(cdk::TYPE_DOUBLE)) {
+      this->addForeignFunction("printd");
       _pf.CALL("printd");
       _pf.TRASH(8);
-      this->addForeignFunction("printd");
     } else {
       std::cerr << "ERROR: CANNOT PRINT EXPRESSION OF UNKNOWN TYPE" << std::endl;
       exit(1);
@@ -434,8 +434,8 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
   }
 
   if (node->newline()) {
-    _pf.CALL("println");
     this->addForeignFunction("println");
+    _pf.CALL("println");
   }
 }
 
