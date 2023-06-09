@@ -42,6 +42,32 @@ namespace mml {
     }
 
   public:
+    inline void pushCondLabel(int label) {
+      _whileCond.push_back(label);
+    }
+
+    inline void popCondLabel() {
+      _whileCond.pop_back();
+    }
+
+    inline int condLabel(int level) {
+      return _whileCond[_whileCond.size() - level];
+    }
+
+  public:
+    inline void pushEndLabel(int label) {
+      _whileEnd.push_back(label);
+    }
+
+    inline void popEndLabel() {
+      _whileEnd.pop_back();
+    }
+
+    inline int endLabel(int level) {
+      return _whileEnd[_whileEnd.size() - level];
+    }
+
+  public:
     inline void pushTextLabel(std::string textLabel) {
       _textLabels.push(textLabel);
     }

@@ -464,8 +464,8 @@ void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
   int condition, end;
-  _whileCond.push_back(condition = ++_lbl);
-  _whileEnd.push_back(end = ++_lbl);
+  this->pushCondLabel(condition = ++_lbl);
+  this->pushEndLabel(end = ++_lbl);
 
   _pf.ALIGN();
   _pf.LABEL(mklbl(condition));
@@ -476,20 +476,16 @@ void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
   _pf.ALIGN();
   _pf.LABEL(mklbl(end));
 
-  _whileCond.pop_back();
-  _whileEnd.pop_back();
+  this->popEndLabel();
+  this->popCondLabel();
 }
 
 void mml::postfix_writer::do_stop_node(mml::stop_node * const node, int lvl) {
-  if (node->level() <= (int)_whileEnd.size()) {
-    _pf.JMP(mklbl(_whileEnd[_whileEnd.size() - node->level()]));
-  }
+  _pf.JMP(mklbl(this->endLabel(node->level())));
 }
 
 void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
-  if (node->level() <= (int)_whileCond.size()) {
-    _pf.JMP(mklbl(_whileCond[_whileCond.size() - node->level()]));
-  }
+  _pf.JMP(mklbl(this->condLabel(node->level())));
 }
 
 //---------------------------------------------------------------------------
