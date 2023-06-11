@@ -627,7 +627,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
 
   std::shared_ptr<cdk::basic_type> type;
   if (!node->function()) {
-    type = this->functionType();
+    type = _type;
   } else {
     node->function()->accept(this, lvl);
     type = node->function()->type();

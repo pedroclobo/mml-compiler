@@ -69,6 +69,9 @@ public:
   }
 
   inline std::shared_ptr<cdk::basic_type> functionType() {
+    if (_functionTypes.empty()) {
+      return nullptr;
+    }
     return _functionTypes.top();
   }
 

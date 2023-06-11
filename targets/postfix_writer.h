@@ -22,7 +22,6 @@ namespace mml {
     std::vector<int> _whileCond, _whileEnd;
 
     std::stack<std::string> _textLabels; // text label of current function
-    std::stack<std::shared_ptr<cdk::basic_type>> _functionTypes; // type of current function
     std::stack<std::string> _returnLabels; // label of current function return
     std::stack<bool> _returnSeen;
     std::set<std::string> _foreignFunctions;
@@ -94,19 +93,6 @@ namespace mml {
 
     inline std::string returnLabel() {
       return _returnLabels.top();
-    }
-
-  public:
-    inline void pushFunctionType(std::shared_ptr<cdk::basic_type> functionType) {
-      _functionTypes.push(functionType);
-    }
-
-    inline void popFunctionType() {
-      _functionTypes.pop();
-    }
-
-    inline std::shared_ptr<cdk::basic_type> functionType() {
-      return _functionTypes.top();
     }
 
   public:
