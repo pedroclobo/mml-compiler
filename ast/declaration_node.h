@@ -29,6 +29,9 @@ namespace mml {
     inline cdk::expression_node* initializer() {
       return _initializer;
     }
+    inline void initializer(cdk::expression_node *initializer) {
+      _initializer = initializer;
+    }
 
     void accept(basic_ast_visitor *sp, int level) {
       sp->do_declaration_node(this, level);
