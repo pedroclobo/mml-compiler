@@ -789,7 +789,9 @@ void mml::type_checker::do_function_definition_node(mml::function_definition_nod
 }
 
 void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
-  node->retval()->accept(this, lvl);
+  if (node->retval()) {
+    node->retval()->accept(this, lvl);
+  }
   // TODO
 }
 
