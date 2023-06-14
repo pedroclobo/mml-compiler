@@ -620,6 +620,13 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     reset_new_symbol();
   }
 
+  if (node->qualifier() == tFORWARD) {
+    return;
+  } else if (node->qualifier() == tFOREIGN) {
+    this->addForeignFunction(node->identifier());
+    return;
+  }
+
   if (this->functionBody() || this->functionArgs()) {
     symbol->global(false);
     if (node->initializer()) {
@@ -636,14 +643,6 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
       }
     }
   } else {
-    // FIXME: should add symbol?
-    if (node->qualifier() == tFORWARD) {
-      return;
-    // FIXME: should add symbol?
-    } else if (node->qualifier() == tFOREIGN) {
-      this->addForeignFunction(node->identifier());
-      return;
-    }
     symbol->global(true);
     if (!node->initializer()) {
       _pf.BSS();
