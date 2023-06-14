@@ -8,6 +8,54 @@
 
 //---------------------------------------------------------------------------
 
+static bool covariant_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2) {
+  if (type1->name() != cdk::TYPE_FUNCTIONAL || type2->name() != cdk::TYPE_FUNCTIONAL) {
+	return false;
+  }
+
+  auto func1 = cdk::functional_type::cast(type1);
+  auto func2 = cdk::functional_type::cast(type2);
+
+  bool covariant = false;
+
+  if (func1->output(0)->name() == cdk::TYPE_DOUBLE && func2->output(0)->name() == cdk::TYPE_INT) {
+    covariant = true;
+  }
+
+  for (size_t i = 0; i < func1->input_length(); i++) {
+    if (func1->input(i)->name() == cdk::TYPE_INT) {
+      if (func2->input(i)->name() == cdk::TYPE_DOUBLE) {
+        covariant = true;
+      }
+    } else if (func1->input(i)->name() == cdk::TYPE_FUNCTIONAL) {
+      if (func2->input(i)->name() == cdk::TYPE_FUNCTIONAL) {
+        covariant = covariant_functions(func1->input(i), func2->input(i));
+      }
+    }
+  }
+
+  return covariant;
+}
+
+
+static mml::function_definition_node * covariant_function(mml::function_definition_node *function, std::shared_ptr<cdk::basic_type> type) {
+  auto func_type = cdk::functional_type::cast(type);
+
+  // change argument types
+  auto arguments = new cdk::sequence_node(0);
+  for (size_t i = 0; i < function->arguments()->size(); i++) {
+    auto old_decl = dynamic_cast<mml::declaration_node *>(function->arguments()->node(i));
+    auto decl = new mml::declaration_node(0, tPRIVATE, func_type->input(i), old_decl->identifier(), nullptr);
+    arguments = new cdk::sequence_node(0, decl, arguments);
+  }
+
+  mml::function_definition_node *cov_func = new mml::function_definition_node(0, arguments, func_type->output(0), function->block());
+
+  return cov_func;
+}
+
+//---------------------------------------------------------------------------
+
 void mml::postfix_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
   // EMPTY
 }
@@ -378,6 +426,33 @@ void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl)
 
 void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
+
+  // create a new function definition node when the types are not the same but are covariant
+  // this should be done by the type checker
+  // however, the assignment node's rvalue can't be changed, so it has do be done here
+  if (covariant_functions(node->lvalue()->type(), node->rvalue()->type())) {
+
+    // rvalue if a variable
+    auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->rvalue());
+    if (rval_node) {
+      auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
+      auto identifier = var_node->name();
+      auto symbol = _symtab.find(identifier);
+      auto function = (mml::function_definition_node*)symbol->value();
+      covariant_function(function, node->lvalue()->type())->accept(this, lvl);
+
+    // rvalue is a function literal
+    } else {
+      auto function = dynamic_cast<mml::function_definition_node*>(node->rvalue());
+      covariant_function(function, node->lvalue()->type())->accept(this, lvl);
+    }
+
+    _pf.DUP32();
+    node->lvalue()->accept(this, lvl);
+    _pf.STINT();
+
+    return;
+  }
 
   node->rvalue()->accept(this, lvl);
   if (node->is_typed(cdk::TYPE_DOUBLE)) {

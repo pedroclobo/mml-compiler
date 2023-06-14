@@ -8,23 +8,93 @@
 
 //---------------------------------------------------------------------------
 
-// TODO: pointer alignment
 bool matching_references(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2) {
-  auto ref1 = cdk::reference_type::cast(type1);
-  auto ref2 = cdk::reference_type::cast(type2);
-
-  if (ref1->referenced()->name() == cdk::TYPE_POINTER && ref2->referenced()->name() == cdk::TYPE_POINTER) {
-    return matching_references(ref1->referenced(), ref2->referenced());
-  } else if (ref1->referenced()->name() == ref2->referenced()->name()){
-    return true;
+  if (type1->name() != cdk::TYPE_POINTER || type2->name() != cdk::TYPE_POINTER) {
+    return false;
   }
 
-  return false;
+  int type1_lvl = 0;
+  int type2_lvl = 0;
+
+  while (type1->name() == cdk::TYPE_POINTER) {
+    type1 = cdk::reference_type::cast(type1)->referenced();
+    type1_lvl++;
+  }
+
+  while (type2->name() == cdk::TYPE_POINTER) {
+    type2 = cdk::reference_type::cast(type2)->referenced();
+    type2_lvl++;
+  }
+
+  bool one_is_void = type1->name() == cdk::TYPE_VOID || type2->name() == cdk::TYPE_VOID;
+  if (type1_lvl != type2_lvl) {
+    return one_is_void;
+  } else {
+    return type1->name() == type2->name() || one_is_void;
+  }
 }
 
-bool covariant_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2) {
-  // FIXME
+bool covariant_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2, bool *covariant) {
+  auto func1 = cdk::functional_type::cast(type1);
+  auto func2 = cdk::functional_type::cast(type2);
+
+  *covariant = false;
+
+  // check output
+  if (func1->output(0)->name() == cdk::TYPE_DOUBLE && func2->output(0)->name() == cdk::TYPE_INT) {
+    *covariant = true;
+  } else if (func1->output(0)->name() != func2->output(0)->name()) {
+    return false;
+  }
+
+  // check input
+  if (func1->input_length() != func2->input_length()) {
+    return false;
+  }
+  for (size_t i = 0; i < func1->input_length(); i++) {
+    if (func1->input(i)->name() == cdk::TYPE_INT) {
+      if (func2->input(i)->name() == cdk::TYPE_DOUBLE) {
+        *covariant = true;
+      } else if (func2->input(i)->name() != cdk::TYPE_INT) {
+        return false;
+      }
+    } else if (func1->input(i)->name() == cdk::TYPE_DOUBLE) {
+      if (func2->input(i)->name() != cdk::TYPE_DOUBLE && func2->input(i)->name() != cdk::TYPE_INT) {
+        return false;
+      }
+    } else if (func1->input(i)->name() == cdk::TYPE_STRING) {
+      if (func2->input(i)->name() != cdk::TYPE_STRING) {
+        return false;
+      }
+    } else if (func1->input(i)->name() == cdk::TYPE_POINTER) {
+      if (func2->input(i)->name() == cdk::TYPE_POINTER) {
+        return matching_references(func1->input(i), func2->input(i));
+      }
+    } else if (func1->input(i)->name() == cdk::TYPE_FUNCTIONAL) {
+      if (func2->input(i)->name() == cdk::TYPE_FUNCTIONAL) {
+        return covariant_functions(func1->input(i), func2->input(i), covariant);
+      }
+    }
+  }
+
   return true;
+}
+
+
+mml::function_definition_node * covariant_function(mml::function_definition_node *function, std::shared_ptr<cdk::basic_type> type) {
+  auto func_type = cdk::functional_type::cast(type);
+
+  // create arguments
+  auto arguments = new cdk::sequence_node(0);
+  for (size_t i = 0; i < function->arguments()->size(); i++) {
+    auto old_decl = dynamic_cast<mml::declaration_node *>(function->arguments()->node(i));
+    auto decl = new mml::declaration_node(0, tPRIVATE, func_type->input(i), old_decl->identifier(), nullptr);
+    arguments = new cdk::sequence_node(0, decl, arguments);
+  }
+
+  mml::function_definition_node *cov_func = new mml::function_definition_node(0, arguments, func_type->output(0), function->block());
+
+  return cov_func;
 }
 
 //---------------------------------------------------------------------------
@@ -486,10 +556,11 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 
   } else if (node->lvalue()->is_typed(cdk::TYPE_FUNCTIONAL)) {
     if (node->rvalue()->is_typed(cdk::TYPE_FUNCTIONAL)) {
-      // FIXME: covariant functions
-      if (!covariant_functions(node->lvalue()->type(), node->rvalue()->type())) {
+      bool covariant;
+      if (!covariant_functions(node->lvalue()->type(), node->rvalue()->type(), &covariant)) {
         throw std::string("assignment of incompatible functions");
       }
+
       node->type(node->lvalue()->type());
     } else {
       throw std::string("invalid rvalue operand to assign to function lvalue");
@@ -584,13 +655,43 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
         throw std::string("wrong type for initializer: expected pointer");
       }
 
-      auto ref_type = cdk::reference_type::cast(node->type())->referenced();
       auto init_ref_type = cdk::reference_type::cast(node->initializer()->type())->referenced();
-      if (!init_ref_type) { // null
+
+      // [type] id = null;
+      if (!init_ref_type) {
         node->initializer()->type(node->type());
+
+      // [type] id = [int];
+      } else if (init_ref_type->name() == cdk::TYPE_UNSPEC) {
+        node->initializer()->type(node->type());
+
       } else {
-        if (ref_type->name() != init_ref_type->name()) {
-          throw std::string("assignment of incompatible pointers");
+        if (!matching_references(node->type(), node->initializer()->type())) {
+          throw std::string("wrong type for initializer: incompatible pointer types");
+        }
+      }
+    } else if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
+      if (!node->initializer()->is_typed(cdk::TYPE_FUNCTIONAL)) {
+        throw std::string("wrong type for initializer: expected function");
+      }
+      bool covariant;
+      if (!covariant_functions(node->type(), node->initializer()->type(), &covariant)) {
+        // TODO: create covariant function
+        throw std::string("wrong type for initializer: incompatible function");
+      }
+      if (covariant) {
+
+        // check for variable_node
+        auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->initializer());
+        if (rval_node) {
+          auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
+          auto identifier = var_node->name();
+          auto symbol = _symtab.find(identifier);
+          auto function = (mml::function_definition_node*)symbol->value();
+          node->initializer(covariant_function(function, node->type()));
+        } else {
+          auto function = dynamic_cast<mml::function_definition_node*>(node->initializer());
+          node->initializer(covariant_function(function, node->type()));
         }
       }
     }
@@ -601,6 +702,9 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
 
   // FIXME: handle other types (function not supported)
   auto symbol = std::make_shared<mml::symbol>(node->type(), node->identifier(), node->qualifier());
+  if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
+    symbol->value(node->initializer());
+  }
   if (node->qualifier() == tFORWARD) {
     symbol->global(true);
   }
@@ -633,8 +737,49 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
     type = node->function()->type();
   }
 
-  node->arguments()->accept(this, lvl);
   auto func_type = cdk::functional_type::cast(type);
+  auto arguments = new cdk::sequence_node(node->lineno());
+
+  for (size_t i = 0; i < node->arguments()->size(); i++) {
+    node->argument(i)->accept(this, lvl);
+    cdk::expression_node *argument;
+
+    if (node->argument(i)->is_typed(cdk::TYPE_FUNCTIONAL)) {
+
+      if (func_type->input(i)->name() != cdk::TYPE_FUNCTIONAL) {
+        throw std::string("wrong type for initializer: expected function"); // FIXME
+      }
+      bool covariant;
+      if (!covariant_functions(func_type->input(i), node->argument(i)->type(), &covariant)) {
+        // TODO: create covariant function
+        throw std::string("wrong type for initializer: incompatible function"); // FIXME
+      }
+      if (covariant) {
+
+        // check for variable_node
+        auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->argument(i));
+        if (rval_node) {
+          auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
+          auto identifier = var_node->name();
+          auto symbol = _symtab.find(identifier);
+          auto function = (mml::function_definition_node*)symbol->value();
+
+          argument = covariant_function(function, func_type->input(i));
+        } else {
+          auto function = dynamic_cast<mml::function_definition_node*>(node->argument(i));
+          argument = covariant_function(function, func_type->input(i));
+        }
+      } else {
+        argument = node->argument(i);
+      }
+
+    } else {
+      argument = node->argument(i);
+    }
+    arguments = new cdk::sequence_node(node->lineno(), argument, arguments);
+  }
+
+  node->arguments(arguments);
   node->type(func_type->output(0));
   // TODO
 }
