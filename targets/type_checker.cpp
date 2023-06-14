@@ -419,7 +419,7 @@ void mml::type_checker::do_ne_node(cdk::ne_node *const node, int lvl) {
       node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
     }
   } else {
-    throw std::string("invalid arguments to gt operation");
+    throw std::string("invalid arguments to ne operation");
   }
 }
 
@@ -442,7 +442,7 @@ void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
       node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
     }
   } else {
-    throw std::string("invalid arguments to gt operation");
+    throw std::string("invalid arguments to eq operation");
   }
 }
 
