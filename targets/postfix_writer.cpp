@@ -649,7 +649,11 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
       _pf.BSS();
       _pf.ALIGN();
       if (node->qualifier() == tPUBLIC) {
-        _pf.GLOBAL(node->identifier(), _pf.OBJ());
+        if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
+          _pf.GLOBAL(node->identifier(), _pf.FUNC());
+        } else {
+          _pf.GLOBAL(node->identifier(), _pf.OBJ());
+        }
       }
       _pf.LABEL(node->identifier());
       _pf.SALLOC(node->type()->size());
@@ -657,7 +661,11 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
       _pf.DATA();
       _pf.ALIGN();
       if (node->qualifier() == tPUBLIC) {
-        _pf.GLOBAL(node->identifier(), _pf.OBJ());
+        if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
+          _pf.GLOBAL(node->identifier(), _pf.FUNC());
+        } else {
+          _pf.GLOBAL(node->identifier(), _pf.OBJ());
+        }
       }
       _pf.LABEL(node->identifier());
       node->initializer()->accept(this, lvl);
