@@ -14,7 +14,7 @@ namespace mml {
 
     basic_ast_visitor *_parent;
 
-    std::shared_ptr<cdk::basic_type> _functionType;
+    std::shared_ptr<cdk::basic_type> _functionType; // type of the current function
     mml::context_type _context;
 
   public:
