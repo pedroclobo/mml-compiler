@@ -679,6 +679,8 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 }
 
 void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
   this->pushOffset(0);
 
   if (node->declarations()) {
@@ -788,6 +790,8 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
 }
 
 void mml::postfix_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
   int lbl = ++_lbl;
 
   this->pushTextLabel(mklbl(lbl));

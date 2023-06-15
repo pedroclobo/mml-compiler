@@ -1,5 +1,6 @@
 #include <string>
 #include "targets/type_checker.h"
+#include "targets/context_checker.h"
 #include ".auto/all_nodes.h"  // automatically generated
 #include <cdk/types/primitive_type.h>
 #include "mml_parser.tab.h"
@@ -729,7 +730,8 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
 }
 
 void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) {
-  // EMPTY
+  mml::context_checker cc(_compiler);
+  node->accept(&cc, lvl);
 }
 
 //---------------------------------------------------------------------------
@@ -793,7 +795,8 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
 }
 
 void mml::type_checker::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
-  // EMPTY
+  mml::context_checker cc(_compiler);
+  node->accept(&cc, lvl);
 }
 
 void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
