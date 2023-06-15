@@ -764,7 +764,6 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
   for (size_t i = 0; i < node->arguments()->size(); i++) {
     node->argument(i)->accept(this, lvl);
 
-
     if (funcType->input(i)->name() == cdk::TYPE_INT) {
       if (!node->argument(i)->is_typed(cdk::TYPE_INT)) {
         throw std::string("wrong type for argument: expected integer");
