@@ -74,9 +74,6 @@ namespace mml {
     }
 
     inline std::string textLabel() {
-      if (_textLabels.empty()) {
-        return "";
-      }
       return _textLabels.top();
     }
 

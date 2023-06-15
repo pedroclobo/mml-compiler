@@ -93,11 +93,7 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
     _pf.DATA();
     _pf.SADDR(mklbl(lbl));
   } else {
-    if (this->textLabel() == "") {
-      _pf.TEXT();
-    } else {
-      _pf.TEXT(this->textLabel());
-    }
+    _pf.TEXT(this->textLabel());
     _pf.ADDR(mklbl(lbl));
   }
 }
@@ -111,11 +107,8 @@ void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl)
     _pf.ALIGN();
     _pf.LABEL(mklbl(lbl = ++_lbl));
     _pf.SDOUBLE(node->value());
-    if (this->textLabel() == "") {
-      _pf.TEXT();
-    } else {
-      _pf.TEXT(this->textLabel());
-    }
+
+    _pf.TEXT(this->textLabel());
     _pf.ADDR(mklbl(lbl));
     _pf.LDDOUBLE();
   }
@@ -690,6 +683,7 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   }
   this->popContext();
 
+  this->pushTextLabel("_main");
   this->pushReturnLabel(mklbl(++_lbl));
   this->pushFunctionType(cdk::functional_type::create(cdk::primitive_type::create(4, cdk::TYPE_INT)));
   this->pushReturnSeen();
@@ -699,7 +693,7 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   node->accept(&frame_calc, lvl);
 
   // generate the main function (RTS mandates that its name be "_main")
-  _pf.TEXT();
+  _pf.TEXT("_main");
   _pf.ALIGN();
   _pf.GLOBAL("_main", _pf.FUNC());
   _pf.LABEL("_main");
@@ -730,6 +724,7 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   this->popReturnSeen();
   this->popFunctionType();
   this->popReturnLabel();
+  this->popTextLabel();
 }
 
 //---------------------------------------------------------------------------
@@ -842,11 +837,7 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
     _pf.DATA();
     _pf.SADDR(mklbl(lbl));
   } else {
-    if (this->textLabel() == "") {
-      _pf.TEXT();
-    } else {
-      _pf.TEXT(this->textLabel());
-    }
+    _pf.TEXT(this->textLabel());
     _pf.ADDR(mklbl(lbl));
   }
 }
