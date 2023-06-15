@@ -694,13 +694,12 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
           node->initializer(covariant_function(function, node->type()));
         }
       }
+    // auto
+    } else if (node->is_typed(cdk::TYPE_UNSPEC)) {
+      node->type(node->initializer()->type());
     }
-    // FIXME: handle other types
-
-    node->type(node->initializer()->type());
   }
 
-  // FIXME: handle other types (function not supported)
   auto symbol = std::make_shared<mml::symbol>(node->type(), node->identifier(), node->qualifier());
   if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
     symbol->value(node->initializer());
