@@ -202,6 +202,9 @@ void mml::type_checker::do_add_node(cdk::add_node *const node, int lvl) {
       throw std::string("invalid right operand to add to double");
     }
   } else if (node->left()->is_typed(cdk::TYPE_POINTER)) {
+    if (cdk::reference_type::cast(node->left()->type())->referenced()->name() == cdk::TYPE_FUNCTIONAL) {
+      throw std::string("function pointers don't support arithmetic");
+    }
     if (node->right()->is_typed(cdk::TYPE_INT)) {
       node->type(node->left()->type());
     } else {
@@ -235,6 +238,10 @@ void mml::type_checker::do_sub_node(cdk::sub_node *const node, int lvl) {
       throw std::string("invalid right operand to add to double");
     }
   } else if (node->left()->is_typed(cdk::TYPE_POINTER)) {
+    if (cdk::reference_type::cast(node->left()->type())->referenced()->name() == cdk::TYPE_FUNCTIONAL) {
+      throw std::string("function pointers don't support arithmetic");
+    }
+
     if (node->right()->is_typed(cdk::TYPE_INT)) {
       node->type(node->left()->type());
     } else if (node->right()->is_typed(cdk::TYPE_POINTER)) {
