@@ -26,14 +26,14 @@ namespace mml {
     std::stack<std::string> _returnLabels; // label of current function return
     std::stack<bool> _returnSeen;
     std::set<std::string> _foreignFunctions;
-    std::stack<int> _offsets;
+    int _offset;
 
     std::stack<mml::context_type> _contexts;
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,
                    cdk::basic_postfix_emitter &pf) :
-        basic_ast_visitor(compiler), _symtab(symtab), _pf(pf), _lbl(0) {
+        basic_ast_visitor(compiler), _symtab(symtab), _pf(pf), _lbl(0), _offset(0) {
     }
 
   public:
@@ -123,20 +123,12 @@ namespace mml {
     }
 
   public:
-    inline void pushOffset(int offset) {
-      _offsets.push(offset);
-    }
-
-    inline void popOffset() {
-      _offsets.pop();
-    }
-
     inline void setOffset(int offset) {
-      _offsets.top() = offset;
+      _offset = offset;
     }
 
     inline int offset() {
-      return _offsets.top();
+      return _offset;
     }
 
   public:

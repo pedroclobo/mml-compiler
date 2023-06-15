@@ -682,7 +682,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  this->pushOffset(0);
+  this->setOffset(0);
 
   this->pushContext(mml::CONTEXT_GLOBAL);
   if (node->declarations()) {
@@ -730,7 +730,6 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   this->popReturnSeen();
   this->popFunctionType();
   this->popReturnLabel();
-  this->popOffset();
 }
 
 //---------------------------------------------------------------------------
@@ -807,7 +806,7 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
 
   _symtab.push();
 
-  this->pushOffset(8);
+  this->setOffset(8);
   this->pushContext(mml::CONTEXT_FUNCTION_ARGS);
 
   node->arguments()->accept(this, lvl);
