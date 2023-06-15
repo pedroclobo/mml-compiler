@@ -78,12 +78,12 @@ EXPONENT               [eE][-+]?{DIGIT}+
 <X_ESCAPE>t              *yylval.s += '\t'; yy_pop_state();
 <X_ESCAPE>n              *yylval.s += '\n'; yy_pop_state();
 <X_ESCAPE>r              *yylval.s += '\r'; yy_pop_state();
-<X_ESCAPE>[0-7]{1,3}     *yylval.s += (char)strtoul(yytext, NULL, 8); yy_pop_state();
+<X_ESCAPE>[0-7]{1,3}     *yylval.s += (char)strtoul(yytext, NULL, 8); if (strtoul(yytext, NULL, 8) > UINT8_MAX) yyerror("Overflow"); yy_pop_state();
 
-0[0-7]+                  yylval.i = strtoul(yytext, NULL, 8); if (errno == ERANGE) yyerror("Overflow"); return tINTEGER;
+0[0-7]+                  yylval.i = strtoul(yytext, NULL, 8); if (strtoul(yytext, NULL, 8) > INT32_MAX) yyerror("Overflow"); return tINTEGER;
 
-{INT}                    yylval.i = strtol(yytext, nullptr, 10); if (errno == ERANGE) yyerror("Overflow"); return tINTEGER;
-{DOUBLE}                 yylval.d = strtod(yytext, nullptr); if (errno == ERANGE) yyerror("Overflow"); return tDOUBLE;
+{INT}                    yylval.i = strtol(yytext, NULL, 10); if (strtol(yytext, NULL, 10) > INT32_MAX) yyerror("Overflow"); return tINTEGER;
+{DOUBLE}                 yylval.d = strtod(yytext, NULL); if (errno == ERANGE) yyerror("Overflow"); return tDOUBLE;
 
 [-()<>=+*/%;{}.,@~[\]?]  return *yytext;
 
