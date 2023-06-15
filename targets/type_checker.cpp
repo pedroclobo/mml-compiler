@@ -643,6 +643,10 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
   if (node->initializer()) {
     node->initializer()->accept(this, lvl);
 
+    if (node->initializer()->is_typed(cdk::TYPE_VOID)) {
+      throw std::string("wrong type for initializer: void");
+    }
+
     if (node->is_typed(cdk::TYPE_INT)) {
       if (!node->initializer()->is_typed(cdk::TYPE_INT)) {
         throw std::string("wrong type for initializer: expected integer");
