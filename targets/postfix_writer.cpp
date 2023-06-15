@@ -432,7 +432,7 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
   // however, the assignment node's rvalue can't be changed, so it has do be done here
   if (covariant_functions(node->lvalue()->type(), node->rvalue()->type())) {
 
-    // rvalue if a variable
+    // rvalue is a variable
     auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->rvalue());
     if (rval_node) {
       auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
