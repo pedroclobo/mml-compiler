@@ -6,18 +6,45 @@
 namespace mml {
 
   class context_checker: public basic_ast_visitor {
-    bool _return_seen;
-    bool _stop_or_next_seen;
-    int _cycle_depth;
+    bool _returnSeen;
+    bool _stopOrNextSeen;
+    int _cycleDepth;
 
   public:
     context_checker(std::shared_ptr<cdk::compiler> compiler) :
-        basic_ast_visitor(compiler), _return_seen(false), _stop_or_next_seen(false), _cycle_depth(0) {
+        basic_ast_visitor(compiler), _returnSeen(false), _stopOrNextSeen(false), _cycleDepth(0) {
     }
 
   public:
     ~context_checker() {
       os().flush();
+    }
+
+  public:
+    inline void setReturnSeen(bool returnSeen) {
+      _returnSeen = returnSeen;
+    }
+
+    inline bool returnSeen() {
+      return _returnSeen;
+    }
+
+  public:
+    inline void setStopOrNextSeen(bool stopOrNextSeen) {
+      _stopOrNextSeen = stopOrNextSeen;
+    }
+
+    inline bool stopOrNextSeen() {
+      return _stopOrNextSeen;
+    }
+
+  public:
+    inline void setCycleDepth(int cycleDepth) {
+      _cycleDepth = cycleDepth;
+    }
+
+    inline int cycleDepth() {
+      return _cycleDepth;
     }
 
   public:

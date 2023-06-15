@@ -20,14 +20,14 @@ void mml::context_checker::do_data_node(cdk::data_node * const node, int lvl) {
 }
 
 void mml::context_checker::do_sequence_node(cdk::sequence_node * const node, int lvl) {
-  _return_seen = false;
-  _stop_or_next_seen = false;
+  this->setReturnSeen(false);
+  this->setStopOrNextSeen(false);
 
   for (size_t i = 0; i < node->size(); i++) {
-    if (_return_seen) {
+    if (this->returnSeen()) {
       throw std::string("return must be the last instruction in a block");
-    } else if (_stop_or_next_seen) {
-      throw std::string("break/continue must be the last instruction in a block");
+    } else if (this->stopOrNextSeen()) {
+      throw std::string("stop/next must be the last instruction in a block");
     }
 
     node->node(i)->accept(this, lvl);
@@ -135,47 +135,74 @@ void mml::context_checker::do_read_node(mml::read_node * const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::context_checker::do_while_node(mml::while_node * const node, int lvl) {
-  _cycle_depth++;
+  this->setCycleDepth(this->cycleDepth() + 1);
 
-  _return_seen = false;
-  _stop_or_next_seen = false;
+  this->setReturnSeen(false);
+  this->setStopOrNextSeen(false);
+
   node->block()->accept(this, lvl);
-  _return_seen = false;
 
-  _cycle_depth--;
+  // this->setStopOrNextSeen(false);
+  this->setReturnSeen(false);
+
+  this->setCycleDepth(this->cycleDepth() - 1);
 }
 
 void mml::context_checker::do_stop_node(mml::stop_node * const node, int lvl) {
-  if (node->level() > _cycle_depth) {
+  if (node->level() > this->cycleDepth()) {
     throw std::string("invalid stop");
   }
-  _stop_or_next_seen = true;
+
+  this->setStopOrNextSeen(true);
 }
 
 void mml::context_checker::do_next_node(mml::next_node * const node, int lvl) {
-  if (node->level() > _cycle_depth) {
+  if (node->level() > this->cycleDepth()) {
     throw std::string("invalid next");
   }
-  _stop_or_next_seen = true;
+
+  this->setStopOrNextSeen(true);
 }
 
 //---------------------------------------------------------------------------
 
 void mml::context_checker::do_if_node(mml::if_node * const node, int lvl) {
-  // EMPTY
+  node->block()->accept(this, lvl);
+
+  this->setReturnSeen(false);
+  this->setStopOrNextSeen(false);
 }
 
 void mml::context_checker::do_if_else_node(mml::if_else_node * const node, int lvl) {
-  // EMPTY
+  this->setReturnSeen(false);
+  this->setStopOrNextSeen(false);
+
+  node->thenblock()->accept(this, lvl);
+
+  bool then_return_seen = this->returnSeen();
+  bool then_stop_or_next_seen = this->stopOrNextSeen();
+
+  // check else block
+  this->setReturnSeen(false);
+  this->setStopOrNextSeen(false);
+
+  node->elseblock()->accept(this, lvl);
+
+  // both blocks must agree
+  this->setReturnSeen(this->returnSeen() && then_return_seen);
+  this->setStopOrNextSeen(this->stopOrNextSeen() && then_stop_or_next_seen);
 }
 
 //---------------------------------------------------------------------------
 
 void mml::context_checker::do_block_node(mml::block_node * const node, int lvl) {
-  _return_seen = false;
-  _stop_or_next_seen = false;
-  // TODO: accept declarations?
+  this->setReturnSeen(false);
+  this->setStopOrNextSeen(false);
+
   node->instructions()->accept(this, lvl);
+
+  this->setStopOrNextSeen(false);
+  this->setReturnSeen(false);
 }
 
 void mml::context_checker::do_declaration_node(mml::declaration_node * const node, int lvl) {
@@ -183,7 +210,7 @@ void mml::context_checker::do_declaration_node(mml::declaration_node * const nod
 }
 
 void mml::context_checker::do_program_node(mml::program_node * const node, int lvl) {
-  _return_seen = false;
+  this->setReturnSeen(false);
   node->block()->accept(this, lvl);
 }
 
@@ -194,13 +221,13 @@ void mml::context_checker::do_function_call_node(mml::function_call_node * const
 }
 
 void mml::context_checker::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
-  _return_seen = false;
+  this->setReturnSeen(false);
   node->block()->accept(this, lvl);
 }
 
 void mml::context_checker::do_return_node(mml::return_node * const node, int lvl) {
-  _return_seen = true;
-  _stop_or_next_seen = true;
+  this->setReturnSeen(true);
+  this->setStopOrNextSeen(true);
 }
 
 //---------------------------------------------------------------------------
