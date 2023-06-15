@@ -40,17 +40,17 @@ static bool covariant_functions(std::shared_ptr<cdk::basic_type> type1, std::sha
 
 
 static mml::function_definition_node * covariant_function(mml::function_definition_node *function, std::shared_ptr<cdk::basic_type> type) {
-  auto func_type = cdk::functional_type::cast(type);
+  auto funcType = cdk::functional_type::cast(type);
 
   // change argument types
   auto arguments = new cdk::sequence_node(0);
   for (size_t i = 0; i < function->arguments()->size(); i++) {
     auto old_decl = dynamic_cast<mml::declaration_node *>(function->arguments()->node(i));
-    auto decl = new mml::declaration_node(0, tPRIVATE, func_type->input(i), old_decl->identifier(), nullptr);
+    auto decl = new mml::declaration_node(0, tPRIVATE, funcType->input(i), old_decl->identifier(), nullptr);
     arguments = new cdk::sequence_node(0, decl, arguments);
   }
 
-  mml::function_definition_node *cov_func = new mml::function_definition_node(0, arguments, func_type->output(0), function->block());
+  mml::function_definition_node *cov_func = new mml::function_definition_node(0, arguments, funcType->output(0), function->block());
 
   return cov_func;
 }
