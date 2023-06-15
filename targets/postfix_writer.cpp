@@ -650,6 +650,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
       }
       _pf.LABEL(node->identifier());
 
+      // avoid initializer being an integer_node in `double d = 1;`
       if (node->is_typed(cdk::TYPE_DOUBLE) && node->initializer()->is_typed(cdk::TYPE_INT)) {
         auto init_node = dynamic_cast<cdk::integer_node*>(node->initializer());
         _pf.SDOUBLE(init_node->value());
