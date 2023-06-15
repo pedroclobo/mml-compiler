@@ -10,6 +10,8 @@ namespace mml {
     CONTEXT_MAIN_BODY = 1UL << 0,
     CONTEXT_FUNCTION_BODY = 1UL << 1,
     CONTEXT_FUNCTION_ARGS = 1UL << 2,
+
+    CONTEXT_UNKNOWN = 1UL << 3,
   };
 
 } // mml

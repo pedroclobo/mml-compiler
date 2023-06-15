@@ -8,6 +8,7 @@
 #include <cdk/compiler.h>
 #include <cdk/symbol_table.h>
 #include "targets/symbol.h"
+#include "targets/context.h"
 
 /* do not edit -- include node forward declarations */
 #define __NODE_DECLARATIONS_ONLY__
@@ -28,6 +29,7 @@ private:
   // last symbol inserted in symbol table
   std::shared_ptr<mml::symbol> _new_symbol;
   std::stack<std::shared_ptr<cdk::basic_type>> _functionTypes; // type of current function
+  std::stack<mml::context_type> _contexts;
 
 protected:
   basic_ast_visitor(std::shared_ptr<cdk::compiler> compiler) :
@@ -74,6 +76,23 @@ public:
     }
     return _functionTypes.top();
   }
+
+public:
+  inline void pushContext(mml::context_type context) {
+    _contexts.push(context);
+  }
+
+  inline void popContext() {
+    _contexts.pop();
+  }
+
+  inline mml::context_type context() {
+    if (_contexts.empty()) {
+      return mml::CONTEXT_UNKNOWN;
+    }
+    return _contexts.top();
+  }
+
 
 public:
   // do not edit these lines

@@ -2,7 +2,6 @@
 #define __MML_TARGETS_POSTFIX_WRITER_H__
 
 #include "targets/basic_ast_visitor.h"
-#include "targets/context.h"
 
 #include <sstream>
 #include <vector>
@@ -27,8 +26,6 @@ namespace mml {
     std::stack<bool> _returnSeen;
     std::set<std::string> _foreignFunctions;
     int _offset;
-
-    std::stack<mml::context_type> _contexts;
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,
@@ -129,19 +126,6 @@ namespace mml {
 
     inline int offset() {
       return _offset;
-    }
-
-  public:
-    inline void pushContext(mml::context_type context) {
-      _contexts.push(context);
-    }
-
-    inline void popContext() {
-      _contexts.pop();
-    }
-
-    inline mml::context_type context() {
-      return _contexts.top();
     }
 
   private:
