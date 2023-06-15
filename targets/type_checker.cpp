@@ -812,10 +812,48 @@ void mml::type_checker::do_function_definition_node(mml::function_definition_nod
 }
 
 void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
+  auto funcType = cdk::functional_type::cast(_type);
+
+  if (node->retval() && funcType->output(0)->name() == cdk::TYPE_VOID) {
+    throw std::string("void function can't return a value");
+  } else if (!node->retval() && funcType->output(0)->name() != cdk::TYPE_VOID) {
+    throw std::string("non void function must return a value");
+  }
+
   if (node->retval()) {
     node->retval()->accept(this, lvl);
+
+    if (funcType->output(0)->name() == cdk::TYPE_INT) {
+      if (!node->retval()->is_typed(cdk::TYPE_INT)) {
+        throw std::string("wrong return value: expected integer");
+      }
+
+    } else if (funcType->output(0)->name() == cdk::TYPE_DOUBLE) {
+      if (!node->retval()->is_typed(cdk::TYPE_DOUBLE) && !node->retval()->is_typed(cdk::TYPE_INT)) {
+        throw std::string("wrong return value: expected double");
+      }
+
+    } else if (funcType->output(0)->name() == cdk::TYPE_STRING) {
+      if (!node->retval()->is_typed(cdk::TYPE_STRING)) {
+        throw std::string("wrong return value: expected string");
+      }
+
+    } else if (funcType->output(0)->name() == cdk::TYPE_POINTER) {
+      if (!node->retval()->is_typed(cdk::TYPE_POINTER)) {
+        throw std::string("wrong return value: expected pointer");
+      } else if (!matching_references(funcType->output(0), node->retval()->type())) {
+        throw std::string("wrong return value: incompatible pointers");
+      }
+
+    } else if (funcType->output(0)->name() == cdk::TYPE_FUNCTIONAL) {
+      bool covariant = false;
+      if (!node->retval()->is_typed(cdk::TYPE_FUNCTIONAL)) {
+        throw std::string("wrong return value: expected function");
+      } else if (!covariant_functions(funcType->output(0), node->retval()->type(), &covariant) && !covariant) {
+        throw std::string("wrong return value: incompatible functions");
+      }
+    }
   }
-  // TODO
 }
 
 //---------------------------------------------------------------------------
