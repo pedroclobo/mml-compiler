@@ -883,7 +883,7 @@ void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
       if (!node->retval()->is_typed(cdk::TYPE_POINTER)) {
         throw std::string("wrong return value: expected pointer");
       } else if (!matching_references(funcType->output(0), node->retval()->type())) {
-        throw std::string("wrong return value: incompatible pointers");
+        throw std::string("wrong return value: incompatible pointer");
       }
 
     } else if (funcType->output(0)->name() == cdk::TYPE_FUNCTIONAL) {
@@ -891,7 +891,7 @@ void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
       if (!node->retval()->is_typed(cdk::TYPE_FUNCTIONAL)) {
         throw std::string("wrong return value: expected function");
       } else if (!matching_functions(funcType->output(0), node->retval()->type(), &covariant) && !covariant) {
-        throw std::string("wrong return value: incompatible functions");
+        throw std::string("wrong return value: incompatible function");
       }
     }
   }
