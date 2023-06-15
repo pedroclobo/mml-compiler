@@ -600,7 +600,11 @@ void mml::type_checker::do_read_node(mml::read_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_while_node(mml::while_node *const node, int lvl) {
-  // EMPTY
+  node->condition()->accept(this, lvl);
+
+  if (!node->condition()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("expected integer condition");
+  }
 }
 
 void mml::type_checker::do_stop_node(mml::stop_node * const node, int lvl) {
