@@ -759,51 +759,85 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
     type = node->function()->type();
   }
 
-  auto func_type = cdk::functional_type::cast(type);
+  auto funcType = cdk::functional_type::cast(type);
+
+  cdk::expression_node *argument = nullptr;
   auto arguments = new cdk::sequence_node(node->lineno());
+
+  if (funcType->input_length() != node->arguments()->size()) {
+    throw std::string("invalid number of arguments in function call");
+  }
 
   for (size_t i = 0; i < node->arguments()->size(); i++) {
     node->argument(i)->accept(this, lvl);
-    cdk::expression_node *argument;
 
-    if (node->argument(i)->is_typed(cdk::TYPE_FUNCTIONAL)) {
 
-      if (func_type->input(i)->name() != cdk::TYPE_FUNCTIONAL) {
-        throw std::string("wrong type for initializer: expected function"); // FIXME
+    if (funcType->input(i)->name() == cdk::TYPE_INT) {
+      if (!node->argument(i)->is_typed(cdk::TYPE_INT)) {
+        throw std::string("wrong type for argument: expected integer");
       }
+      argument = node->argument(i);
+
+    } else if (funcType->input(i)->name() == cdk::TYPE_DOUBLE) {
+      if (!node->argument(i)->is_typed(cdk::TYPE_DOUBLE) && !node->argument(i)->is_typed(cdk::TYPE_INT)) {
+        throw std::string("wrong type for argument: expected double");
+      }
+      argument = node->argument(i);
+
+    } else if (funcType->input(i)->name() == cdk::TYPE_STRING) {
+      if (!node->argument(i)->is_typed(cdk::TYPE_STRING)) {
+        throw std::string("wrong type for argument: expected string");
+      }
+      argument = node->argument(i);
+
+    } else if (funcType->input(i)->name() == cdk::TYPE_POINTER) {
+      if (!node->argument(i)->is_typed(cdk::TYPE_POINTER)) {
+        throw std::string("wrong type for argument: expected pointer");
+      } else if (!matching_references(funcType->input(i), node->argument(i)->type())) {
+        throw std::string("wrong type for argument: incompatible pointer");
+      }
+      argument = node->argument(i);
+
+    } else if (funcType->input(i)->name() == cdk::TYPE_FUNCTIONAL) {
+      if (!node->argument(i)->is_typed(cdk::TYPE_FUNCTIONAL)) {
+        throw std::string("wrong type for argument: expected function");
+      }
+
       bool covariant;
-      if (!matching_functions(func_type->input(i), node->argument(i)->type(), &covariant)) {
-        // TODO: create covariant function
-        throw std::string("wrong type for initializer: incompatible function"); // FIXME
-      }
-      if (covariant) {
+      if (!matching_functions(funcType->input(i), node->argument(i)->type(), &covariant) && !covariant) {
+        throw std::string("wrong type for argument: incompatible function");
 
-        // check for variable_node
+      } else if (!covariant) {
+        argument = node->argument(i);
+
+      // create covariant argument
+      } else {
+
+        // argument is a variable
         auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->argument(i));
         if (rval_node) {
           auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
           auto identifier = var_node->name();
+
+          // get expression assigned to variable
           auto symbol = _symtab.find(identifier);
           auto function = (mml::function_definition_node*)symbol->value();
 
-          argument = covariant_function(function, func_type->input(i));
+          argument = covariant_function(function, funcType->input(i));
+
+        // argument is a lambda
         } else {
           auto function = dynamic_cast<mml::function_definition_node*>(node->argument(i));
-          argument = covariant_function(function, func_type->input(i));
+          argument = covariant_function(function, funcType->input(i));
         }
-      } else {
-        argument = node->argument(i);
       }
-
-    } else {
-      argument = node->argument(i);
     }
+
     arguments = new cdk::sequence_node(node->lineno(), argument, arguments);
   }
 
   node->arguments(arguments);
-  node->type(func_type->output(0));
-  // TODO
+  node->type(funcType->output(0));
 }
 
 void mml::type_checker::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
