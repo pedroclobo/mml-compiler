@@ -721,9 +721,8 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   _pf.LEAVE();
   _pf.RET();
 
-  auto foreigns = this->foreignFunctions();
-  for (auto identifier = foreigns.begin(); identifier != foreigns.end(); ++identifier) {
-    _pf.EXTERN(*identifier);
+  for (auto identifier: this->foreignFunctions()) {
+    _pf.EXTERN(identifier);
   }
 
   this->popReturnSeen();
