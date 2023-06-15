@@ -143,6 +143,13 @@ data_type       : tTYPE_INT                                            { $$ = cd
                                                                          delete $3;
                                                                          delete output;
                                                                        }
+                | tTYPE_VOID '<' data_types '>'                        {
+                                                                         auto output = new std::vector<std::shared_ptr<cdk::basic_type>>();
+                                                                         output->push_back(cdk::primitive_type::create(4, cdk::TYPE_VOID));
+                                                                         $$ = cdk::functional_type::create(*$3, *output);
+                                                                         delete $3;
+                                                                         delete output;
+                                                                       }
                 ;
 
 data_types      : /* empty */                                          { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>();                                                             }
@@ -178,6 +185,7 @@ expression      : tINTEGER                                             { $$ = ne
                 | '[' expression ']'                                   { $$ = new mml::stack_alloc_node(LINE, $2);                                                                             }
                 | lvalue '?'                                           { $$ = new mml::address_of_node(LINE, $1);                                                                              }
                 | '(' variables ')' tARROW data_type '{' block '}'     { $$ = new mml::function_definition_node(LINE, $2, $5, $7);                                                             }
+                | '(' variables ')' tARROW tTYPE_VOID '{' block '}'    { $$ = new mml::function_definition_node(LINE, $2, cdk::primitive_type::create(0, cdk::TYPE_VOID), $7);                 }
                 | expression '(' ')'                                   { $$ = new mml::function_call_node(LINE, $1, new cdk::sequence_node(LINE));                                             }
                 | expression '(' expressions ')'                       { $$ = new mml::function_call_node(LINE, $1, $3);                                                                       }
                 | '@' '(' expressions ')'                              { $$ = new mml::function_call_node(LINE, nullptr, $3);                                                                  }
