@@ -150,7 +150,10 @@ void mml::xml_writer::do_or_node(cdk::or_node * const node, int lvl) {
 
 void mml::xml_writer::do_variable_node(cdk::variable_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  os() << std::string(lvl, ' ') << "<" << node->label() << ">" << node->name() << "</" << node->label() << ">" << std::endl;
+
+  os() << std::string(lvl, ' ') << "<" << node->label()
+       << " type='" << ttos(node->type()) << "'>"
+       << node->name() << "</" << node->label() << ">" << std::endl;
 }
 
 void mml::xml_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
@@ -162,7 +165,8 @@ void mml::xml_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
 
 void mml::xml_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
+  os() << std::string(lvl, ' ') << "<" << node->label()
+       << " type='" << ttos(node->type()) << "'>";
 
   node->lvalue()->accept(this, lvl + 2);
   reset_new_symbol();
