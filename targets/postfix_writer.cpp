@@ -734,50 +734,56 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
 void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  std::shared_ptr<cdk::basic_type> type;
-  if (!node->function()) {
-    type = this->functionType();
-  } else {
-    type = node->function()->type();
-  }
-  auto func_type = cdk::functional_type::cast(type);
+  std::shared_ptr<cdk::functional_type> funcType;
 
-  int argsSize = 0;
+  // recursive call
+  if (!node->function()) {
+    funcType = cdk::functional_type::cast(this->functionType());
+  } else {
+    funcType = cdk::functional_type::cast(node->function()->type());
+  }
+
+  // arguments go in the stack in reverse
+  int args_size = 0;
   for (int i = node->arguments()->size() - 1; i >= 0; i--) {
     auto arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
-    auto type = func_type->input(i);
     arg->accept(this, lvl);
-    if (arg->is_typed(cdk::TYPE_INT) && type->name() == cdk::TYPE_DOUBLE) {
+    if (funcType->input(i)->name() == cdk::TYPE_DOUBLE && arg->is_typed(cdk::TYPE_INT)) {
       _pf.I2D();
     }
-    argsSize += arg->type()->size();
+    args_size += funcType->input(i)->size();
   }
 
   if (node->function()) {
-    // f() or lambda()
+    // function is a variable
     auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->function());
     if (rval_node) {
       auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
       auto identifier = var_node->name();
 
       auto symbol = _symtab.find(identifier);
+
       if (symbol->qualifier() == tFOREIGN) {
         _pf.CALL(symbol->identifier());
       } else {
         node->function()->accept(this, lvl);
         _pf.BRANCH();
       }
+
+    // function is a lambda
     } else {
       node->function()->accept(this, lvl);
       _pf.BRANCH();
     }
+
+  // recursive call
   } else {
     _pf.ADDR(this->textLabel());
     _pf.BRANCH();
   }
 
-  if (argsSize > 0) {
-    _pf.TRASH(argsSize);
+  if (args_size > 0) {
+    _pf.TRASH(args_size);
   }
 
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
