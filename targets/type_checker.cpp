@@ -576,6 +576,7 @@ void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int
 
 void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
   node->arguments()->accept(this, lvl);
+
   for (size_t i = 0; i < node->arguments()->size(); i++) {
     auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
     if (child->is_typed(cdk::TYPE_POINTER)) {
