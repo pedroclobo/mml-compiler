@@ -22,7 +22,7 @@ namespace mml {
     std::vector<int> _whileCond, _whileEnd;
 
     std::stack<std::string> _textLabels; // text label of current function
-    std::stack<std::string> _returnLabels; // label of current function return
+    std::stack<int> _returnLabels; // label of current function return
     std::stack<bool> _returnSeen;
     std::set<std::string> _foreignFunctions;
     int _offset;
@@ -78,7 +78,7 @@ namespace mml {
     }
 
   public:
-    inline void pushReturnLabel(std::string returnLabel) {
+    inline void pushReturnLabel(int returnLabel) {
       _returnLabels.push(returnLabel);
     }
 
@@ -86,7 +86,7 @@ namespace mml {
       _returnLabels.pop();
     }
 
-    inline std::string returnLabel() {
+    inline int returnLabel() {
       return _returnLabels.top();
     }
 

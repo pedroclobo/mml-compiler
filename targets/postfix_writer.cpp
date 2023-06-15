@@ -689,7 +689,7 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   this->popContext();
 
   this->pushTextLabel("_main");
-  this->pushReturnLabel(mklbl(++_lbl));
+  this->pushReturnLabel(++_lbl);
   this->pushFunctionType(cdk::functional_type::create(cdk::primitive_type::create(4, cdk::TYPE_INT)));
   this->pushReturnSeen();
 
@@ -716,7 +716,7 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
     _pf.STFVAL32();
   } else {
     _pf.ALIGN();
-    _pf.LABEL(this->returnLabel());
+    _pf.LABEL(mklbl(this->returnLabel()));
   }
   _pf.LEAVE();
   _pf.RET();
@@ -801,7 +801,7 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
   int lbl = ++_lbl;
 
   this->pushTextLabel(mklbl(lbl));
-  this->pushReturnLabel(mklbl(++_lbl));
+  this->pushReturnLabel(++_lbl);
   this->pushFunctionType(node->type());
   this->pushReturnSeen();
 
@@ -832,7 +832,7 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
   this->popContext();
 
   _pf.ALIGN();
-  _pf.LABEL(this->returnLabel());
+  _pf.LABEL(mklbl(this->returnLabel()));
   _pf.LEAVE();
   _pf.RET();
 
@@ -871,7 +871,7 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
     }
   }
 
-  _pf.JMP(this->returnLabel());
+  _pf.JMP(mklbl(this->returnLabel()));
   this->setReturnSeen(true);
 }
 
