@@ -36,7 +36,7 @@ bool matching_references(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr
   }
 }
 
-bool covariant_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2, bool *covariant) {
+bool matching_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2, bool *covariant) {
   auto func1 = cdk::functional_type::cast(type1);
   auto func2 = cdk::functional_type::cast(type2);
 
@@ -74,7 +74,7 @@ bool covariant_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr
       }
     } else if (func1->input(i)->name() == cdk::TYPE_FUNCTIONAL) {
       if (func2->input(i)->name() == cdk::TYPE_FUNCTIONAL) {
-        return covariant_functions(func1->input(i), func2->input(i), covariant);
+        return matching_functions(func1->input(i), func2->input(i), covariant);
       }
     }
   }
@@ -566,7 +566,7 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
   } else if (node->lvalue()->is_typed(cdk::TYPE_FUNCTIONAL)) {
     if (node->rvalue()->is_typed(cdk::TYPE_FUNCTIONAL)) {
       bool covariant;
-      if (!covariant_functions(node->lvalue()->type(), node->rvalue()->type(), &covariant)) {
+      if (!matching_functions(node->lvalue()->type(), node->rvalue()->type(), &covariant)) {
         throw std::string("assignment of incompatible functions");
       }
 
@@ -693,7 +693,7 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
         throw std::string("wrong type for initializer: expected function");
       }
       bool covariant;
-      if (!covariant_functions(node->type(), node->initializer()->type(), &covariant)) {
+      if (!matching_functions(node->type(), node->initializer()->type(), &covariant)) {
         // TODO: create covariant function
         throw std::string("wrong type for initializer: incompatible function");
       }
@@ -772,7 +772,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
         throw std::string("wrong type for initializer: expected function"); // FIXME
       }
       bool covariant;
-      if (!covariant_functions(func_type->input(i), node->argument(i)->type(), &covariant)) {
+      if (!matching_functions(func_type->input(i), node->argument(i)->type(), &covariant)) {
         // TODO: create covariant function
         throw std::string("wrong type for initializer: incompatible function"); // FIXME
       }
@@ -849,7 +849,7 @@ void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
       bool covariant = false;
       if (!node->retval()->is_typed(cdk::TYPE_FUNCTIONAL)) {
         throw std::string("wrong return value: expected function");
-      } else if (!covariant_functions(funcType->output(0), node->retval()->type(), &covariant) && !covariant) {
+      } else if (!matching_functions(funcType->output(0), node->retval()->type(), &covariant) && !covariant) {
         throw std::string("wrong return value: incompatible functions");
       }
     }
