@@ -166,8 +166,12 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
     auto ref_type = cdk::reference_type::cast(node->type())->referenced();
-    _pf.INT(ref_type->size());
-    _pf.MUL();
+    if (ref_type->name() == cdk::TYPE_VOID) {
+      // EMPTY
+    } else {
+      _pf.INT(ref_type->size());
+      _pf.MUL();
+    }
   }
 
   node->right()->accept(this, lvl);
@@ -175,8 +179,12 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
     auto ref_type = cdk::reference_type::cast(node->type())->referenced();
-    _pf.INT(ref_type->size());
-    _pf.MUL();
+    if (ref_type->name() == cdk::TYPE_VOID) {
+      // EMPTY
+    } else {
+      _pf.INT(ref_type->size());
+      _pf.MUL();
+    }
   }
 
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
