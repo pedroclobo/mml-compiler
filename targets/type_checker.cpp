@@ -10,7 +10,7 @@
 
 //---------------------------------------------------------------------------
 
-bool matching_references(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2) {
+static bool matching_references(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2) {
   if (type1->name() != cdk::TYPE_POINTER || type2->name() != cdk::TYPE_POINTER) {
     return false;
   }
@@ -36,7 +36,7 @@ bool matching_references(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr
   }
 }
 
-bool matching_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2, bool *covariant) {
+static bool matching_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2, bool *covariant) {
   auto func1 = cdk::functional_type::cast(type1);
   auto func2 = cdk::functional_type::cast(type2);
 
@@ -82,8 +82,7 @@ bool matching_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<
   return true;
 }
 
-
-mml::function_definition_node * covariant_function(mml::function_definition_node *function, std::shared_ptr<cdk::basic_type> type) {
+static mml::function_definition_node * covariant_function(mml::function_definition_node *function, std::shared_ptr<cdk::basic_type> type) {
   auto func_type = cdk::functional_type::cast(type);
 
   // create arguments
