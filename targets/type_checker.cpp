@@ -772,7 +772,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
 
     } else if (funcType->input(i)->name() == cdk::TYPE_DOUBLE) {
       if (!node->argument(i)->is_typed(cdk::TYPE_DOUBLE) && !node->argument(i)->is_typed(cdk::TYPE_INT)) {
-        throw std::string("wrong type for argument: expected double");
+        throw std::string("wrong type for argument: expected integer or double");
       }
       argument = node->argument(i);
 
@@ -856,7 +856,7 @@ void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
 
     } else if (funcType->output(0)->name() == cdk::TYPE_DOUBLE) {
       if (!node->retval()->is_typed(cdk::TYPE_DOUBLE) && !node->retval()->is_typed(cdk::TYPE_INT)) {
-        throw std::string("wrong return value: expected double");
+        throw std::string("wrong return value: expected integer or double");
       }
 
     } else if (funcType->output(0)->name() == cdk::TYPE_STRING) {
