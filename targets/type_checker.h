@@ -14,17 +14,22 @@ namespace mml {
 
     basic_ast_visitor *_parent;
 
-    std::shared_ptr<cdk::basic_type> _type;
+    std::shared_ptr<cdk::basic_type> _functionType;
     mml::context_type _context;
 
   public:
-    type_checker(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab, basic_ast_visitor *parent, std::shared_ptr<cdk::basic_type> type, mml::context_type context) :
-        basic_ast_visitor(compiler), _symtab(symtab), _parent(parent), _type(type), _context(context) {
+    type_checker(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab, basic_ast_visitor *parent, std::shared_ptr<cdk::basic_type> functionType, mml::context_type context) :
+        basic_ast_visitor(compiler), _symtab(symtab), _parent(parent), _functionType(functionType), _context(context) {
     }
 
   public:
     ~type_checker() {
       os().flush();
+    }
+
+  public:
+    inline std::shared_ptr<cdk::basic_type> functionType() {
+      return _functionType;
     }
 
   public:

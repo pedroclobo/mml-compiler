@@ -752,7 +752,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
 
   std::shared_ptr<cdk::basic_type> type;
   if (!node->function()) {
-    type = _type;
+    type = this->functionType();
   } else {
     node->function()->accept(this, lvl);
     type = node->function()->type();
@@ -811,7 +811,7 @@ void mml::type_checker::do_function_definition_node(mml::function_definition_nod
 }
 
 void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
-  auto funcType = cdk::functional_type::cast(_type);
+  auto funcType = cdk::functional_type::cast(this->functionType());
 
   if (node->retval() && funcType->output(0)->name() == cdk::TYPE_VOID) {
     throw std::string("void function can't return a value");
