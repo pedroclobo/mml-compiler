@@ -750,6 +750,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node * const no
     throw std::string("can't recursively call main function");
   }
 
+  // function is nullptr in recursive call
   std::shared_ptr<cdk::basic_type> type;
   if (!node->function()) {
     type = this->functionType();
