@@ -27,6 +27,11 @@ namespace mml {
       os().flush();
     }
 
+  public:
+    inline mml::context_type context() {
+      return _context;
+    }
+
   protected:
     void processUnaryExpression(cdk::unary_operation_node *const node, int lvl);
     void processBinaryExpression(cdk::binary_operation_node *const node, int lvl);

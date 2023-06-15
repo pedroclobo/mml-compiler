@@ -1,6 +1,7 @@
 #include <string>
 #include "targets/type_checker.h"
 #include "targets/context_checker.h"
+#include "targets/context.h"
 #include ".auto/all_nodes.h"  // automatically generated
 #include <cdk/types/primitive_type.h>
 #include "mml_parser.tab.h"
@@ -745,6 +746,10 @@ void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) 
 
 void mml::type_checker::do_function_call_node(mml::function_call_node * const node, int lvl) {
   ASSERT_UNSPEC;
+
+  if (this->context() == mml::CONTEXT_MAIN_BODY && !node->function()) {
+    throw std::string("can't recursively call main function");
+  }
 
   std::shared_ptr<cdk::basic_type> type;
   if (!node->function()) {
