@@ -284,6 +284,7 @@ void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, in
 
 void mml::xml_writer::do_program_node(mml::program_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
+  this->pushFunctionType(cdk::functional_type::create(cdk::primitive_type::create(4, cdk::TYPE_INT)));
   _symtab.push();
   openTag(node, lvl);
   openTag("declarations", lvl + 2);
@@ -296,6 +297,7 @@ void mml::xml_writer::do_program_node(mml::program_node * const node, int lvl) {
   closeTag("program", lvl + 2);
   closeTag(node, lvl);
   _symtab.pop();
+  this->popFunctionType();
 }
 
 //---------------------------------------------------------------------------
@@ -317,6 +319,7 @@ void mml::xml_writer::do_function_call_node(mml::function_call_node * const node
 
 void mml::xml_writer::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
+  this->pushFunctionType(node->type());
   _symtab.push();
   os() << std::string(lvl, ' ') << "<" << node->label()
        << " type='" << ttos(node->type()) << "'>" << std::endl;
@@ -328,6 +331,7 @@ void mml::xml_writer::do_function_definition_node(mml::function_definition_node 
   closeTag("block", lvl + 2);
   closeTag(node, lvl);
   _symtab.pop();
+  this->popFunctionType();
 }
 
 void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
