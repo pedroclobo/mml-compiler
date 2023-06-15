@@ -652,14 +652,17 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
       if (!node->initializer()->is_typed(cdk::TYPE_INT)) {
         throw std::string("wrong type for initializer: expected integer");
       }
+
     } else if (node->is_typed(cdk::TYPE_DOUBLE)) {
       if (!node->initializer()->is_typed(cdk::TYPE_INT) && !node->initializer()->is_typed(cdk::TYPE_DOUBLE)) {
         throw std::string("wrong type for initializer: expected integer or double");
       }
+
     } else if (node->is_typed(cdk::TYPE_STRING)) {
       if (!node->initializer()->is_typed(cdk::TYPE_STRING)) {
         throw std::string("wrong type for initializer: expected string");
       }
+
     } else if (node->is_typed(cdk::TYPE_POINTER)) {
       if (!node->initializer()->is_typed(cdk::TYPE_POINTER)) {
         throw std::string("wrong type for initializer: expected pointer");
@@ -677,33 +680,40 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
 
       } else {
         if (!matching_references(node->type(), node->initializer()->type())) {
-          throw std::string("wrong type for initializer: incompatible pointer types");
+          throw std::string("wrong type for initializer: incompatible pointer");
         }
       }
+
     } else if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
       if (!node->initializer()->is_typed(cdk::TYPE_FUNCTIONAL)) {
         throw std::string("wrong type for initializer: expected function");
       }
       bool covariant;
-      if (!matching_functions(node->type(), node->initializer()->type(), &covariant)) {
-        // TODO: create covariant function
+      if (!matching_functions(node->type(), node->initializer()->type(), &covariant) && !covariant) {
         throw std::string("wrong type for initializer: incompatible function");
-      }
-      if (covariant) {
 
-        // check for variable_node
+      // create covariant initializer
+      } else if (covariant) {
+
+        // argument is a variable
         auto rval_node = dynamic_cast<cdk::rvalue_node*>(node->initializer());
         if (rval_node) {
           auto var_node = dynamic_cast<cdk::variable_node*>(rval_node->lvalue());
           auto identifier = var_node->name();
+
+          // get expression assigned to variable
           auto symbol = _symtab.find(identifier);
           auto function = (mml::function_definition_node*)symbol->value();
+
           node->initializer(covariant_function(function, node->type()));
+
+        // argument is a lambda
         } else {
           auto function = dynamic_cast<mml::function_definition_node*>(node->initializer());
           node->initializer(covariant_function(function, node->type()));
         }
       }
+
     // auto
     } else if (node->is_typed(cdk::TYPE_UNSPEC)) {
       node->type(node->initializer()->type());
@@ -711,22 +721,27 @@ void mml::type_checker::do_declaration_node(mml::declaration_node * const node, 
   }
 
   auto symbol = std::make_shared<mml::symbol>(node->type(), node->identifier(), node->qualifier());
+
+  // value is the expression assigned to the function
   if (node->is_typed(cdk::TYPE_FUNCTIONAL)) {
     symbol->value(node->initializer());
   }
-  if (node->qualifier() == tFORWARD) {
+
+  if (node->qualifier() == tFORWARD || node->qualifier() == tFOREIGN || node->qualifier() == tPUBLIC) {
     symbol->global(true);
   }
+
   if (!_symtab.insert(node->identifier(), symbol)){
     auto old_symbol = _symtab.find(node->identifier());
     if (old_symbol->qualifier() == tFORWARD) {
       _symtab.replace(node->identifier(), symbol);
+      _parent->set_new_symbol(symbol);
     } else {
       throw std::string(node->identifier() + " redeclared");
     }
+  } else {
+    _parent->set_new_symbol(symbol);
   }
-
-  _parent->set_new_symbol(symbol);
 }
 
 void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) {
