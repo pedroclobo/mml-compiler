@@ -11,7 +11,7 @@
 
 static bool covariant_functions(std::shared_ptr<cdk::basic_type> type1, std::shared_ptr<cdk::basic_type> type2) {
   if (type1->name() != cdk::TYPE_FUNCTIONAL || type2->name() != cdk::TYPE_FUNCTIONAL) {
-	return false;
+    return false;
   }
 
   auto func1 = cdk::functional_type::cast(type1);
