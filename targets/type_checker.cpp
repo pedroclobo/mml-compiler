@@ -823,8 +823,8 @@ void mml::type_checker::do_return_node(mml::return_node * const node, int lvl) {
 void mml::type_checker::do_index_node(mml::index_node * const node, int lvl) {
   ASSERT_UNSPEC;
 
-  node->base()->accept(this, lvl + 2);
-  node->index()->accept(this, lvl + 2);
+  node->base()->accept(this, lvl);
+  node->index()->accept(this, lvl);
 
   if (!node->base()->is_typed(cdk::TYPE_POINTER)) {
     throw std::string("only pointers can be indexed");
@@ -834,8 +834,7 @@ void mml::type_checker::do_index_node(mml::index_node * const node, int lvl) {
     throw std::string("index must be a integer");
   }
 
-  auto ref_type = std::dynamic_pointer_cast<cdk::reference_type>(node->base()->type());
-  node->type(ref_type->referenced());
+  node->type(cdk::reference_type::cast(node->base()->type())->referenced());
 }
 
 void mml::type_checker::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
