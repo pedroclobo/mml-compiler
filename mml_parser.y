@@ -135,7 +135,7 @@ data_type       : tTYPE_INT                                            { $$ = cd
                 | tTYPE_DOUBLE                                         { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE);                                                                }
                 | tTYPE_STRING                                         { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING);                                                                }
                 | '[' data_type ']'                                    { $$ = cdk::reference_type::create(4, $2);                                                                              }
-                | '[' tTYPE_VOID ']'                                   { $$ = cdk::reference_type::create(4, cdk::primitive_type::create(4, cdk::TYPE_VOID));                                  }
+                | '[' tTYPE_VOID ']'                                   { $$ = cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_VOID));                                  }
                 | data_type '<' data_types '>'                         {
                                                                          auto output = new std::vector<std::shared_ptr<cdk::basic_type>>();
                                                                          output->push_back($1);
@@ -145,7 +145,7 @@ data_type       : tTYPE_INT                                            { $$ = cd
                                                                        }
                 | tTYPE_VOID '<' data_types '>'                        {
                                                                          auto output = new std::vector<std::shared_ptr<cdk::basic_type>>();
-                                                                         output->push_back(cdk::primitive_type::create(4, cdk::TYPE_VOID));
+                                                                         output->push_back(cdk::primitive_type::create(0, cdk::TYPE_VOID));
                                                                          $$ = cdk::functional_type::create(*$3, *output);
                                                                          delete $3;
                                                                          delete output;
