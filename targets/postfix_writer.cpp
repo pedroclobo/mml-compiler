@@ -3,6 +3,7 @@
 #include "targets/type_checker.h"
 #include "targets/postfix_writer.h"
 #include "targets/frame_size_calculator.h"
+#include "targets/context.h"
 #include ".auto/all_nodes.h"  // all_nodes.h is automatically generated
 #include "mml_parser.tab.h"
 
@@ -73,10 +74,10 @@ void mml::postfix_writer::do_sequence_node(cdk::sequence_node * const node, int 
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_integer_node(cdk::integer_node * const node, int lvl) {
-  if (this->functionBody() || this->functionArgs()) {
-    _pf.INT(node->value());
-  } else {
+  if (this->context() == mml::CONTEXT_GLOBAL) {
     _pf.SINT(node->value());
+  } else {
+    _pf.INT(node->value());
   }
 }
 
@@ -88,21 +89,23 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
   _pf.LABEL(mklbl(lbl = ++_lbl));
   _pf.SSTRING(node->value());
 
-  if (this->functionBody() || this->functionArgs()) {
+  if (this->context() == mml::CONTEXT_GLOBAL) {
+    _pf.DATA();
+    _pf.SADDR(mklbl(lbl));
+  } else {
     if (this->textLabel() == "") {
       _pf.TEXT();
     } else {
       _pf.TEXT(this->textLabel());
     }
     _pf.ADDR(mklbl(lbl));
-  } else {
-    _pf.DATA();
-    _pf.SADDR(mklbl(lbl));
   }
 }
 
 void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  if (this->functionBody() || this->functionArgs()) {
+  if (this->context() == mml::CONTEXT_GLOBAL) {
+    _pf.SDOUBLE(node->value());
+  } else {
     int lbl;
     _pf.RODATA();
     _pf.ALIGN();
@@ -115,18 +118,16 @@ void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl)
     }
     _pf.ADDR(mklbl(lbl));
     _pf.LDDOUBLE();
-  } else {
-    _pf.SDOUBLE(node->value());
   }
 }
 
 void mml::postfix_writer::do_null_node(mml::null_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  if (this->functionBody() || this->functionArgs()) {
-    _pf.INT(0);
-  } else {
+  if (this->context() == mml::CONTEXT_GLOBAL) {
     _pf.SINT(0);
+  } else {
+    _pf.INT(0);
   }
 }
 
@@ -606,10 +607,10 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   ASSERT_SAFE_EXPRESSIONS;
 
   int offset = 0;
-  if (this->functionArgs()) {
+  if (this->context() == mml::CONTEXT_FUNCTION_ARGS) {
     offset = this->offset();
     this->setOffset(this->offset() + node->type()->size());
-  } else if (this->functionBody()) {
+  } else if (this->context() == mml::CONTEXT_FUNCTION_BODY || this->context() == mml::CONTEXT_MAIN_BODY) {
     this->setOffset(this->offset() - node->type()->size());
     offset = this->offset();
   }
@@ -627,22 +628,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     return;
   }
 
-  if (this->functionBody() || this->functionArgs()) {
-    symbol->global(false);
-    if (node->initializer()) {
-      node->initializer()->accept(this, lvl);
-      if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_STRING) || node->is_typed(cdk::TYPE_POINTER) || node->is_typed(cdk::TYPE_FUNCTIONAL)) {
-        _pf.LOCAL(symbol->offset());
-        _pf.STINT();
-      } else if (node->is_typed(cdk::TYPE_DOUBLE)) {
-        if (node->initializer()->is_typed(cdk::TYPE_INT)) {
-          _pf.I2D();
-        }
-        _pf.LOCAL(symbol->offset());
-        _pf.STDOUBLE();
-      }
-    }
-  } else {
+  if (this->context() == mml::CONTEXT_GLOBAL) {
     symbol->global(true);
     if (!node->initializer()) {
       _pf.BSS();
@@ -675,6 +661,21 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
         node->initializer()->accept(this, lvl);
       }
     }
+  } else {
+    symbol->global(false);
+    if (node->initializer()) {
+      node->initializer()->accept(this, lvl);
+      if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_STRING) || node->is_typed(cdk::TYPE_POINTER) || node->is_typed(cdk::TYPE_FUNCTIONAL)) {
+        _pf.LOCAL(symbol->offset());
+        _pf.STINT();
+      } else if (node->is_typed(cdk::TYPE_DOUBLE)) {
+        if (node->initializer()->is_typed(cdk::TYPE_INT)) {
+          _pf.I2D();
+        }
+        _pf.LOCAL(symbol->offset());
+        _pf.STDOUBLE();
+      }
+    }
   }
 }
 
@@ -683,11 +684,11 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
 
   this->pushOffset(0);
 
+  this->pushContext(mml::CONTEXT_GLOBAL);
   if (node->declarations()) {
     node->declarations()->accept(this, lvl);
   }
-
-  this->pushFunctionBody(true);
+  this->popContext();
 
   this->pushReturnLabel(mklbl(++_lbl));
   this->pushFunctionType(cdk::functional_type::create(cdk::primitive_type::create(4, cdk::TYPE_INT)));
@@ -704,9 +705,11 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   _pf.LABEL("_main");
   _pf.ENTER(frame_calc.size());
 
+  this->pushContext(mml::CONTEXT_MAIN_BODY);
   if (node->block()) {
     node->block()->accept(this, lvl);
   }
+  this->popContext();
 
   // end the main function
   if (!this->returnSeen()) {
@@ -728,7 +731,6 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   this->popFunctionType();
   this->popReturnLabel();
   this->popOffset();
-  this->popFunctionBody();
 }
 
 //---------------------------------------------------------------------------
@@ -803,11 +805,10 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
   frame_size_calculator frame_calc(_compiler, _symtab);
   node->accept(&frame_calc, lvl);
 
-  this->pushFunctionArgs(true);
-  this->pushFunctionBody(false);
-  this->pushOffset(8);
-
   _symtab.push();
+
+  this->pushOffset(8);
+  this->pushContext(mml::CONTEXT_FUNCTION_ARGS);
 
   node->arguments()->accept(this, lvl);
 
@@ -817,15 +818,14 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
   _pf.LABEL(mklbl(lbl));
   _pf.ENTER(frame_calc.size());
 
+  this->popContext();
   this->setOffset(0);
-  this->setFunctionArgs(false);
-  this->setFunctionBody(true);
 
+  this->pushContext(mml::CONTEXT_FUNCTION_BODY);
   if (node->block()) {
     node->block()->accept(this, lvl);
   }
-
-  this->setFunctionBody(false);
+  this->popContext();
 
   _pf.ALIGN();
   _pf.LABEL(this->returnLabel());
@@ -834,24 +834,21 @@ void mml::postfix_writer::do_function_definition_node(mml::function_definition_n
 
   _symtab.pop();
 
-  this->popFunctionBody();
-  this->popFunctionArgs();
-
   this->popReturnSeen();
   this->popFunctionType();
   this->popReturnLabel();
   this->popTextLabel();
 
-  if (this->functionBody() || this->functionArgs()) {
+  if (this->context() == mml::CONTEXT_GLOBAL) {
+    _pf.DATA();
+    _pf.SADDR(mklbl(lbl));
+  } else {
     if (this->textLabel() == "") {
       _pf.TEXT();
     } else {
       _pf.TEXT(this->textLabel());
     }
     _pf.ADDR(mklbl(lbl));
-  } else {
-    _pf.DATA();
-    _pf.SADDR(mklbl(lbl));
   }
 }
 

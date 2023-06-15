@@ -2,6 +2,7 @@
 #define __MML_TARGETS_POSTFIX_WRITER_H__
 
 #include "targets/basic_ast_visitor.h"
+#include "targets/context.h"
 
 #include <sstream>
 #include <vector>
@@ -26,8 +27,8 @@ namespace mml {
     std::stack<bool> _returnSeen;
     std::set<std::string> _foreignFunctions;
     std::stack<int> _offsets;
-    std::stack<bool> _functionBodies;
-    std::stack<bool> _functionArgs;
+
+    std::stack<mml::context_type> _contexts;
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,
@@ -139,43 +140,16 @@ namespace mml {
     }
 
   public:
-    inline void pushFunctionBody(bool functionBody) {
-      _functionBodies.push(functionBody);
+    inline void pushContext(mml::context_type context) {
+      _contexts.push(context);
     }
 
-    inline void popFunctionBody() {
-      _functionBodies.pop();
+    inline void popContext() {
+      _contexts.pop();
     }
 
-    inline void setFunctionBody(bool functionBody) {
-      _functionBodies.top() = functionBody;
-    }
-
-    inline bool functionBody() {
-      if (_functionBodies.empty()) {
-        return false;
-      }
-      return _functionBodies.top();
-    }
-
-  public:
-    inline void pushFunctionArgs(bool functionArgs) {
-      _functionArgs.push(functionArgs);
-    }
-
-    inline void popFunctionArgs() {
-      _functionArgs.pop();
-    }
-
-    inline void setFunctionArgs(bool functionArgs) {
-      _functionArgs.top() = functionArgs;
-    }
-
-    inline bool functionArgs() {
-      if (_functionArgs.empty()) {
-        return false;
-      }
-      return _functionArgs.top();
+    inline mml::context_type context() {
+      return _contexts.top();
     }
 
   private:
