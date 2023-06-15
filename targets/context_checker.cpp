@@ -196,10 +196,6 @@ void mml::context_checker::do_function_call_node(mml::function_call_node * const
 void mml::context_checker::do_function_definition_node(mml::function_definition_node * const node, int lvl) {
   _return_seen = false;
   node->block()->accept(this, lvl);
-
-  if (!_return_seen && !node->is_typed(cdk::TYPE_VOID)) {
-    std::cerr << node->lineno() << ": WARNING: function may not always return" << std::endl;
-  }
 }
 
 void mml::context_checker::do_return_node(mml::return_node * const node, int lvl) {
