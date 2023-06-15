@@ -550,10 +550,12 @@ void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
 }
 
 void mml::postfix_writer::do_stop_node(mml::stop_node * const node, int lvl) {
+  // the type checker guarantees that the stop level is valid
   _pf.JMP(mklbl(this->endLabel(node->level())));
 }
 
 void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
+  // the type checker guarantees that the next level is valid
   _pf.JMP(mklbl(this->condLabel(node->level())));
 }
 
