@@ -142,7 +142,7 @@ void mml::context_checker::do_while_node(mml::while_node * const node, int lvl) 
 
   node->block()->accept(this, lvl);
 
-  // this->setStopOrNextSeen(false);
+  this->setStopOrNextSeen(false);
   this->setReturnSeen(false);
 
   this->setCycleDepth(this->cycleDepth() - 1);
