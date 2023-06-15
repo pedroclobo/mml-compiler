@@ -19,13 +19,13 @@ namespace mml {
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
 
-    std::vector<int> _whileCond, _whileEnd;
+    std::vector<int> _whileCond, _whileEnd; // labels of conditions and end of while cycles
 
     std::stack<std::string> _textLabels; // text label of current function
     std::stack<int> _returnLabels; // label of current function return
-    std::stack<bool> _returnSeen;
-    std::set<std::string> _foreignFunctions;
-    int _offset;
+    std::stack<bool> _returnSeen; // to know if main has a return instruction or not
+    std::set<std::string> _foreignFunctions; // external function identifiers
+    int _offset; // current offset
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,
