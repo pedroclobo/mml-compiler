@@ -663,15 +663,15 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 
     if (node->initializer()) {
       node->initializer()->accept(this, lvl);
-      if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_STRING) || node->is_typed(cdk::TYPE_POINTER) || node->is_typed(cdk::TYPE_FUNCTIONAL)) {
-        _pf.LOCAL(symbol->offset());
-        _pf.STINT();
-      } else if (node->is_typed(cdk::TYPE_DOUBLE)) {
+      if (node->is_typed(cdk::TYPE_DOUBLE)) {
         if (node->initializer()->is_typed(cdk::TYPE_INT)) {
           _pf.I2D();
         }
         _pf.LOCAL(symbol->offset());
         _pf.STDOUBLE();
+      } else {
+        _pf.LOCAL(symbol->offset());
+        _pf.STINT();
       }
     }
   }
