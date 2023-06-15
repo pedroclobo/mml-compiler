@@ -161,7 +161,7 @@ data_type               : tTYPE_INT                                             
                         | tTYPE_DOUBLE                                                 { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE);                                                    }
                         | tTYPE_STRING                                                 { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING);                                                    }
                         | '[' data_type ']'                                            { $$ = cdk::reference_type::create(4, $2);                                                                  }
-                        | '[' tTYPE_VOID ']'                                           { $$ = cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_VOID));                      }
+                        | '[' tTYPE_VOID ']'                                           { $$ = cdk::reference_type::create(4, cdk::primitive_type::create(1, cdk::TYPE_VOID));                      }
                         | data_type '<' data_types '>'                                 {
                                                                                          auto output = new std::vector<std::shared_ptr<cdk::basic_type>>();
                                                                                          output->push_back($1);
