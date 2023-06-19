@@ -1,13 +1,7 @@
-# MML compiler
+# MML Compiler
 
-At the beginning of development, the repository contains source code for the Simple language in which all references to MML have been replaced by MML.
+Project for "Compilers" @ IST - LEIC-T (2022-2023)
 
-The steps to develop a full MML compiler imply the adaptation of:
-* the scanner (`mml_scanner.l`)
-* the parser (`mml_parser.y`)
-* the symbol (`targets/symbol.h`)
-* the type checker (`targets/type_checker.cpp`)
-* the XML writer (for the middle delivery: `targets/xml_writer.cpp`)
-* the Postfix writer (for the final delivery: `targets/postfix_writer.cpp`)
-
-Note that not all the code has to be working for all deliveries. Check the evaluation conditions on the course pages.
+[Project Statement](https://web.tecnico.ulisboa.pt/~david.matos/w/pt/index.php/Compiladores/Projecto_de_Compiladores/Projecto_2022-2023/Manual_de_Refer%C3%AAncia_da_Linguagem_MML)\
+[CDK](https://web.tecnico.ulisboa.pt/~david.matos/w/pt/images/a/a5/Libcdk18-202304130001.tar.bz2)\
+[RTS](https://web.tecnico.ulisboa.pt/~david.matos/w/pt/images/b/be/Librts5-202103031636.tar.bz2)
